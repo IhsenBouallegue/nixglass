@@ -30,8 +30,6 @@
       inputs.self.overlays.additions
       inputs.self.overlays.modifications
       inputs.self.overlays.unstable-packages
-      # mango compositor (so `pkgs.mango` is available for greetd command)
-      inputs.mango.overlays.default
 
       # You can also add overlays exported from other flakes:
       # neovim-nightly-overlay.overlays.default
@@ -63,19 +61,16 @@
 
   networking.hostName = "nixglass";
 
-  # Mango compositor (dwl fork). Blur, animations, scroller layout — all
-  # native, no protocol gymnastics. NixOS module from `inputs.mango` is
-  # wired in flake.nix.
-  programs.mango.enable = true;
+  # Niri scrolling tiling compositor (the niri-flake nixosModule is wired in flake.nix).
+  programs.niri.enable = true;
 
-  # Autologin to mango via greetd. No greeter UI — initial_session fires
-  # automatically. Bare metal and VM both autologin; throwaway by design
-  # for a single-user workstation.
+  # Autologin to niri via greetd. No greeter UI — initial_session fires automatically.
+  # Bare metal and VM both autologin; throwaway by design for a single-user workstation.
   services.greetd = {
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.mango}/bin/mango";
+        command = "${pkgs.niri}/bin/niri-session";
         user = "ihsen";
       };
     };
@@ -101,7 +96,6 @@
   # simplest and ensures other apps (zen, noctalia later) see the same set.
   fonts.packages = with pkgs; [
     jetbrains-mono
-    nerd-fonts.jetbrains-mono
   ];
 
   # VM-only overrides for `nixos-rebuild build-vm --flake .#nixglass`.
@@ -119,14 +113,6 @@
         # Requires nixGL on non-NixOS hosts so qemu can resolve host EGL.
         "-display gtk,gl=on"
       ];
-      # 9p-share the host repo into the VM at the same path so an in-VM
-      # `nixos-rebuild switch --flake .#nixglass` picks up host-side edits
-      # without rebuilding/rebooting the VM. /nix/store is already shared
-      # by the vm runner, so most derivations are cache hits.
-      sharedDirectories.nixglass = {
-        source = "/home/ihsen/Documents/repos/nixglass";
-        target = "/home/ihsen/Documents/repos/nixglass";
-      };
     };
     # Throwaway VM password — autologin via greetd means this is rarely typed,
     # but keep something predictable for sudo / tty fallback.

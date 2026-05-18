@@ -8,7 +8,7 @@
   ...
 }: {
   imports = [
-    ./mango.nix
+    ./niri.nix
     ./ghostty.nix
     ./noctalia.nix
   ];
