@@ -61,6 +61,52 @@
 
   networking.hostName = "nixglass";
 
+  # Niri scrolling tiling compositor (the niri-flake nixosModule is wired in flake.nix).
+  programs.niri.enable = true;
+
+  # Autologin to niri via greetd. No greeter UI — initial_session fires automatically.
+  # Bare metal and VM both autologin; throwaway by design for a single-user workstation.
+  services.greetd = {
+    enable = true;
+    settings = {
+      default_session = {
+        command = "${pkgs.niri}/bin/niri-session";
+        user = "ihsen";
+      };
+    };
+  };
+
+  # Sound — niri itself doesn't pull this in. Pipewire is the standard pick.
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    pulse.enable = true;
+  };
+
+  # VM-only overrides for `nixos-rebuild build-vm --flake .#nixglass`.
+  # The vmVariant is automatically derived from this same host — no separate hostname.
+  virtualisation.vmVariant = {
+    virtualisation = {
+      memorySize = 4096;
+      cores = 4;
+      diskSize = 8192;
+      qemu.options = [
+        # virgl 3D acceleration so niri (a wayland compositor) actually renders.
+        "-device virtio-vga-gl"
+        # SDL not GTK: qemu's GtkGLArea path can't acquire an EGL context on
+        # some Wayland hosts (DMABUF detection fails, epoxy aborts). SDL+GL
+        # works reliably under both X11 and Wayland.
+        "-display sdl,gl=on"
+      ];
+    };
+    # Throwaway VM password — autologin via greetd means this is rarely typed,
+    # but keep something predictable for sudo / tty fallback.
+    # mkForce because the parent host already sets initialPassword.
+    users.users.ihsen.initialPassword = lib.mkForce "vm";
+    # Don't bother with SSH key-only auth inside a throwaway VM.
+    services.openssh.settings.PasswordAuthentication = lib.mkForce true;
+  };
+
   users.users = {
     ihsen = {
       # TODO: You can set an initial password for your user.

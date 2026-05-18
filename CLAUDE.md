@@ -4,7 +4,7 @@ NixOS + flakes + Home Manager config. Migration target from Omarchy (Arch + Hypr
 
 ## Status
 
-Scaffolded from `Misterio77/nix-starter-configs#standard` (NixOS 25.11). Hostname `nixglass`, user `ihsen`. `flake check` passes. **Not yet built.** No niri / noctalia / ghostty / nvim modules yet — only the template scaffold with placeholders filled.
+Scaffolded from `Misterio77/nix-starter-configs#standard` (NixOS 25.11). Hostname `nixglass`, user `ihsen`. `flake check` passes. VM boots to an empty niri session via greetd autologin. No noctalia / ghostty / nvim modules yet.
 
 `nixos/hardware-configuration.nix` is a placeholder. Regenerate at install time via `nixos-generate-config --root /mnt`.
 
@@ -14,7 +14,12 @@ There is **one** `nixosSystem` named `nixglass`. The VM is **not** a separate ho
 
 ```
 # Build + run VM (throwaway test rig)
+# On NixOS hosts:
 nixos-rebuild build-vm --flake .#nixglass && ./result/bin/run-nixglass-vm
+
+# On the current Arch host (no nixos-rebuild available):
+nix build .#nixosConfigurations.nixglass.config.system.build.vm
+nix run --impure github:nix-community/nixGL -- ./result/bin/run-nixglass-vm
 
 # Bare-metal install (eventual)
 # From NixOS installer ISO:
@@ -23,7 +28,17 @@ nixos-generate-config --root /mnt
 nixos-install --flake /mnt/etc/nixos#nixglass
 ```
 
-VM-specific overrides (qemu mem/disk, virgl `-device virtio-vga-gl`, autologin, throwaway password) go in a `virtualisation.vmVariant = { ... }` block inside `nixos/configuration.nix`. **Do not split into two hosts** — they would drift.
+VM-specific overrides (qemu mem/disk, virgl `-device virtio-vga-gl`, SDL+GL display, autologin, throwaway password) go in a `virtualisation.vmVariant = { ... }` block inside `nixos/configuration.nix`. **Do not split into two hosts** — they would drift.
+
+### Why `nix run nixGL` on the Arch host
+
+Nix-built qemu has its own RPATH baked in and can't see Arch's `/usr/lib/libEGL.so.1`. Running it directly aborts in `epoxy_get_proc_address: Couldn't find current GLX or EGL context`. nixGL wraps the call and injects host GL drivers — required for any GL-using Nix binary on a non-NixOS host. Not needed once we boot into actual NixOS.
+
+### qemu SDL controls (no menubar like GTK)
+
+- **Ctrl+Alt+G** — release captured keyboard/mouse
+- Close the SDL window or `pkill qemu-system-x86_64` to quit
+- The display is SDL not GTK because qemu's GtkGLArea path fails on this Wayland host. SDL+GL works under nixGL.
 
 ## Target stack
 
@@ -92,8 +107,8 @@ The bambustudio/cursor/discord packages are unfree — `allowUnfree = true` is a
 
 1. ✅ Install Nix (Determinate official upstream installer) on the Arch host.
 2. ✅ Scaffold flake from Misterio77 standard. Rename, fill FIXMEs.
-3. ⏳ Add niri + noctalia flake inputs; create home modules for ghostty, niri, neovim, noctalia.
-4. ⏳ Iterate via `nixos-rebuild build-vm --flake .#nixglass` until niri+noctalia+zen+ghostty+nvim all work in the VM.
+3. ✅ Add niri-flake input + greetd autologin + vmVariant overrides. VM boots to empty niri session.
+4. ⏳ Add noctalia input, plus home modules for ghostty, neovim, and niri keybinds/spawn-at-startup. Iterate via VM build until niri+noctalia+zen+ghostty+nvim all work.
 5. ⏳ Boot NixOS installer ISO on this box, generate hardware-config, `nixos-install`.
 6. ⏳ Iterate post-install for 1–2 weeks.
 

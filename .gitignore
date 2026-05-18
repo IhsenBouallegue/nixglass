@@ -1,0 +1,9 @@
+# Nix build outputs
+result
+result-*
+
+# VM disk images created by run-nixglass-vm
+*.qcow2
+
+# Claude Code agent state (per-user, not for the repo)
+.claude/

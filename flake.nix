@@ -12,6 +12,11 @@
     # Home manager
     home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Niri scrolling tiling compositor
+    niri.url = "github:sodiboo/niri-flake";
+    niri.inputs.nixpkgs.follows = "nixpkgs";
+    niri.inputs.nixpkgs-stable.follows = "nixpkgs";
   };
 
   outputs = {
@@ -54,6 +59,15 @@
       nixglass = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs;};
         modules = [
+          inputs.niri.nixosModules.niri
+          inputs.home-manager.nixosModules.home-manager
+          {
+            # Not useGlobalPkgs — home.nix declares its own nixpkgs overlays/config,
+            # which is also what the standalone home-manager entrypoint relies on.
+            home-manager.useUserPackages = true;
+            home-manager.extraSpecialArgs = {inherit inputs;};
+            home-manager.users.ihsen = import ./home-manager/home.nix;
+          }
           # > Our main nixos configuration file <
           ./nixos/configuration.nix
         ];
