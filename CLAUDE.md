@@ -4,7 +4,7 @@ NixOS + flakes + Home Manager config. Migration target from Omarchy (Arch + Hypr
 
 ## Status
 
-Scaffolded from `Misterio77/nix-starter-configs#standard` (NixOS 25.11). Hostname `nixglass`, user `ihsen`. `flake check` passes. VM boots to an empty niri session via greetd autologin. No noctalia / ghostty / nvim modules yet.
+Scaffolded from `Misterio77/nix-starter-configs#standard` (NixOS 25.11). Hostname `nixglass`, user `ihsen`. `flake check` passes. VM boots to niri with a Ghostty terminal and a Noctalia top bar (Catppuccin-Lavender preset). No zen / nvim modules yet.
 
 `nixos/hardware-configuration.nix` is a placeholder. Regenerate at install time via `nixos-generate-config --root /mnt`.
 
@@ -59,6 +59,17 @@ Two layers, do not mix:
 - **Noctalia manages at runtime:** all color theming. Its Python template processor reads `~/.config/noctalia/colors.json` and writes themed config files for:
   - Ghostty, Zen (userChrome.css + userContent.css), GTK3/4, Qt, niri borders → auto-themed (native templates).
   - **Neovim is NOT in the native list.** Use a colorscheme plugin (tokyonight/catppuccin) matched to the Noctalia preset, or write a user template in `~/.config/noctalia/user-templates.toml`.
+
+### Current VM state (compromise during step 4)
+
+We're temporarily declaring `programs.noctalia-shell.settings` via the home module, which means home-manager writes `~/.config/noctalia/settings.json` as a `/nix/store` symlink. Noctalia's runtime edits to settings.json are silently dropped (the file is read-only).
+
+This is the **opposite** of the ownership boundary CLAUDE.md prescribes, but it's necessary because:
+
+- Noctalia with empty settings registers no bar widgets and creates no layer-shell surface (`niri msg layers` returns empty).
+- `mkOutOfStoreSymlink` to `${repo}/dotfiles/noctalia/` only resolves on the bare-metal host — the VM has no such path.
+
+For now: iterate bar/widget changes by editing `home-manager/noctalia.nix` and rebuilding. The in-app settings GUI will appear to work but its writes vanish on next HM activation. **Revisit when moving to bare-metal** — at that point switch to mkOutOfStoreSymlink and seed `dotfiles/noctalia/settings.json` from the current declarative version as a starting point.
 
 ### The mkOutOfStoreSymlink rule
 

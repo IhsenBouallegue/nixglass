@@ -83,6 +83,14 @@
     pulse.enable = true;
   };
 
+  # Services Noctalia talks to for status bar widgets (network, battery,
+  # power profile, bluetooth). The VM has no real hardware for most of these
+  # but enabling them is harmless and matches the bare-metal target.
+  networking.networkmanager.enable = true;
+  hardware.bluetooth.enable = true;
+  services.power-profiles-daemon.enable = true;
+  services.upower.enable = true;
+
   # System-wide fonts. Ghostty's font-family reads from fontconfig, which only
   # sees fonts in fonts.packages or the user's HM font scope. System-wide is
   # simplest and ensures other apps (zen, noctalia later) see the same set.
@@ -124,8 +132,7 @@
       openssh.authorizedKeys.keys = [
         # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
       ];
-      # TODO: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
-      extraGroups = ["wheel"];
+      extraGroups = ["wheel" "networkmanager" "video"];
     };
   };
 

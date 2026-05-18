@@ -17,7 +17,9 @@ in {
     };
 
     # Something visible on boot — otherwise it's just gray + cursor.
+    # noctalia-shell handles the bar, wallpaper, launcher, notifications.
     spawn-at-startup = [
+      {command = ["noctalia-shell"];}
       {command = [ghostty];}
     ];
 
@@ -26,6 +28,9 @@ in {
       "Mod+Q".action = close-window;
       "Mod+F".action = fullscreen-window;
       "Mod+Shift+E".action = quit;
+
+      # Noctalia launcher (IPC toggle, so noctalia must already be running).
+      "Mod+Space".action = spawn "noctalia-shell" "ipc" "call" "launcher" "toggle";
 
       # Focus — arrows and vim keys.
       "Mod+Left".action = focus-column-left;

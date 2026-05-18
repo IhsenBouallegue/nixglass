@@ -10,6 +10,7 @@
   imports = [
     ./niri.nix
     ./ghostty.nix
+    ./noctalia.nix
   ];
 
   nixpkgs = {
