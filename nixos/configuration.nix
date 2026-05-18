@@ -83,6 +83,13 @@
     pulse.enable = true;
   };
 
+  # System-wide fonts. Ghostty's font-family reads from fontconfig, which only
+  # sees fonts in fonts.packages or the user's HM font scope. System-wide is
+  # simplest and ensures other apps (zen, noctalia later) see the same set.
+  fonts.packages = with pkgs; [
+    jetbrains-mono
+  ];
+
   # VM-only overrides for `nixos-rebuild build-vm --flake .#nixglass`.
   # The vmVariant is automatically derived from this same host — no separate hostname.
   virtualisation.vmVariant = {
