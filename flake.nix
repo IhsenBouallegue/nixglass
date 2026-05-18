@@ -13,10 +13,11 @@
     home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Niri scrolling tiling compositor
-    niri.url = "github:sodiboo/niri-flake";
-    niri.inputs.nixpkgs.follows = "nixpkgs";
-    niri.inputs.nixpkgs-stable.follows = "nixpkgs";
+    # Mango — dwl-derived Wayland compositor with scroller layout, built-in
+    # blur/shadows/animations. Replaced niri-flake when niri 26.04's blur
+    # ergonomics turned out worse than mango's "blur=1, done" model.
+    mango.url = "github:mangowm/mango";
+    mango.inputs.nixpkgs.follows = "nixpkgs";
 
     # Noctalia desktop shell — bar, launcher, notifications, theming engine
     noctalia.url = "github:noctalia-dev/noctalia-shell";
@@ -63,7 +64,7 @@
       nixglass = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs;};
         modules = [
-          inputs.niri.nixosModules.niri
+          inputs.mango.nixosModules.mango
           inputs.home-manager.nixosModules.home-manager
           {
             # Not useGlobalPkgs — home.nix declares its own nixpkgs overlays/config,

@@ -4,7 +4,9 @@ NixOS + flakes + Home Manager config. Migration target from Omarchy (Arch + Hypr
 
 ## Status
 
-Scaffolded from `Misterio77/nix-starter-configs#standard` (NixOS 25.11). Hostname `nixglass`, user `ihsen`. `flake check` passes. VM boots to niri with a Ghostty terminal and a Noctalia top bar (Catppuccin-Lavender preset). No zen / nvim modules yet.
+Scaffolded from `Misterio77/nix-starter-configs#standard` (NixOS 25.11). Hostname `nixglass`, user `ihsen`. `flake check` passes. VM boots to mango (scroller layout, blur, matte-candy borders) with a Ghostty terminal and a Noctalia top bar (matte-candy palette). No zen / nvim modules yet.
+
+**Compositor change:** initially picked niri for its scrollable tiling, but niri 26.04's blur is gated behind the new `ext-background-effect` protocol and most apps haven't opted in yet (ghostty 1.3.1 doesn't). Switched to **mango** (dwl-derived) which has built-in blur/shadows/animations and a `scroller` tag layout — same scrolling UX, simpler config (`blur = 1` and it works). Git history under the niri commits if we ever want to revisit.
 
 `nixos/hardware-configuration.nix` is a placeholder. Regenerate at install time via `nixos-generate-config --root /mnt`.
 
@@ -20,6 +22,7 @@ nixos-rebuild build-vm --flake .#nixglass && ./result/bin/run-nixglass-vm
 # On the current Arch host (no nixos-rebuild available):
 nix build .#nixosConfigurations.nixglass.config.system.build.vm
 nix run --impure github:nix-community/nixGL -- ./result/bin/run-nixglass-vm
+# Don't delete nixglass.qcow2 between launches — see iteration workflow below.
 
 # Bare-metal install (eventual)
 # From NixOS installer ISO:
@@ -27,6 +30,21 @@ nixos-generate-config --root /mnt
 # copy resulting hardware-configuration.nix into nixos/, commit
 nixos-install --flake /mnt/etc/nixos#nixglass
 ```
+
+### Iteration workflow (edit-on-host, rebuild-and-reboot VM)
+
+The 9p share of this repo into the VM is **for browsing/inspection only** — do not run `nixos-rebuild` inside the VM against the shared path. Reason: the 9p mount unit (`home-ihsen-Documents-repos-nixglass.mount`) is part of `vmVariant`, not the base config. When `nixos-rebuild` inside the VM activates the base config, systemd unmounts the 9p share mid-activation, the path disappears, and subsequent rebuilds fail with "could not find a flake.nix". The activation also bails with exit 4 partway through. **Don't do it.**
+
+The reliable workflow:
+
+1. Edit any `.nix` file on the **host**.
+2. On the **host**: `nix build .#nixosConfigurations.nixglass.config.system.build.vm` — typically seconds once the closure is cached.
+3. Power-down the running VM (qemu **Machine → Power Down**) and re-launch with `nix run --impure github:nix-community/nixGL -- ./result/bin/run-nixglass-vm`.
+4. The persistent qcow2 keeps user state across reboots, so noctalia config / shell history etc. survive.
+
+For tiny CSS-only tweaks (noctalia colourscheme via its in-app GUI, or ghostty colours typed in a config file inside the VM), edit inside the VM, restart the app — no host rebuild needed. But for any change tracked by the flake, host-rebuild + VM reboot is the path.
+
+Only delete `nixglass.qcow2` when you genuinely want a fresh install.
 
 VM-specific overrides (qemu mem/disk, virgl `-device virtio-vga-gl`, SDL+GL display, autologin, throwaway password) go in a `virtualisation.vmVariant = { ... }` block inside `nixos/configuration.nix`. **Do not split into two hosts** — they would drift.
 
@@ -44,7 +62,7 @@ Nix-built qemu has its own RPATH baked in and can't see Arch's `/usr/lib/libEGL.
 
 | Layer | Tool | Notes |
 |---|---|---|
-| Compositor | **Niri** | Scrollable tiling; fits ultrawide. Via `sodiboo/niri-flake`. No native session restore — use `spawn-at-startup` + window rules. |
+| Compositor | **Mango** | dwl-fork with `scroller` tag layout (gives niri-like horizontal scrolling on the ultrawide), plus native blur, shadows, animations. Via `github:mangowm/mango`. Config in `~/.config/mango/config.conf`. Tags 1–9 instead of workspaces. |
 | Bar + theming engine | **Noctalia** | Replaces waybar. Flake input `github:noctalia-dev/noctalia-shell`; not in nixpkgs. Add via `inputs.noctalia.homeModules.default`. PAM entry for lock screen is NOT auto-configured — add manually. |
 | Terminal | Ghostty | Non-color config declarative; colors come from Noctalia. |
 | Browser | Zen | Theming needs `toolkit.legacyUserProfileCustomizations.stylesheets = true` in about:config. |
@@ -57,7 +75,7 @@ Two layers, do not mix:
 
 - **Nix manages:** software install, all non-color config (keybinds, plugins, fonts, packages, niri config, nvim config).
 - **Noctalia manages at runtime:** all color theming. Its Python template processor reads `~/.config/noctalia/colors.json` and writes themed config files for:
-  - Ghostty, Zen (userChrome.css + userContent.css), GTK3/4, Qt, niri borders → auto-themed (native templates).
+  - Ghostty, Zen (userChrome.css + userContent.css), GTK3/4, Qt → auto-themed (native templates). Mango colours are driven via our typed nix config (not noctalia templates).
   - **Neovim is NOT in the native list.** Use a colorscheme plugin (tokyonight/catppuccin) matched to the Noctalia preset, or write a user template in `~/.config/noctalia/user-templates.toml`.
 
 ### Current VM state (compromise during step 4)
@@ -89,13 +107,13 @@ Reference: https://github.com/noctalia-dev/noctalia-shell/issues/2214
 
 ### Things to NOT manage declaratively
 
-- `~/.config/noctalia/settings.json` (Noctalia rewrites it)
-- Themed ghostty config, `gtk.css`, Qt color files, Zen `userChrome.css`/`userContent.css`, niri border colors — all auto-generated by Noctalia.
+- `~/.config/noctalia/settings.json` (Noctalia rewrites it — though we currently break this rule, see "Current VM state" above)
+- Themed ghostty config, `gtk.css`, Qt color files, Zen `userChrome.css`/`userContent.css` — all auto-generated by Noctalia.
 
 ### Things to manage declaratively
 
-- niri config (via `niri-flake` module)
-- ghostty non-color config
+- Mango config (via `wayland.windowManager.mango.settings` — flattened key/value pairs)
+- ghostty config (including matte-candy palette — we don't go through Noctalia's template)
 - nvim full config
 - Custom Noctalia colorscheme JSON in `dotfiles/noctalia/colorschemes/` (static, read-only from Noctalia's POV)
 - All packages, system services, fonts

@@ -55,7 +55,34 @@
         };
       };
 
-      colorSchemes.predefinedScheme = "Catppuccin-Lavender";
+      # Use a custom colorscheme instead of any predefined one.
+      colorSchemes = {
+        darkMode = true;
+        useWallpaperColors = false;
+      };
+    };
+
+    # Matte-candy palette mapped onto noctalia's Material-You-ish color
+    # roles. Same hex values as the Ayaka palette in
+    # ~/Documents/repos/omarchy-customizer/theme/matte-candy/colors.toml,
+    # mapped: primary=blue, secondary=purple, tertiary=cyan, error=red(accent).
+    colors = {
+      mPrimary = "#6699ff";
+      mOnPrimary = "#060c10";
+      mSecondary = "#cc66cc";
+      mOnSecondary = "#060c10";
+      mTertiary = "#66cccc";
+      mOnTertiary = "#060c10";
+      mError = "#e65c5c";
+      mOnError = "#060c10";
+      mSurface = "#060c10";
+      mOnSurface = "#e6e6e6";
+      mSurfaceVariant = "#262626";
+      mOnSurfaceVariant = "#b3b3b3";
+      mOutline = "#404040";
+      mShadow = "#000000";
+      mHover = "#ffcc66";
+      mOnHover = "#060c10";
     };
   };
 }
