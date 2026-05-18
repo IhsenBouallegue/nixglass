@@ -93,10 +93,10 @@
       qemu.options = [
         # virgl 3D acceleration so niri (a wayland compositor) actually renders.
         "-device virtio-vga-gl"
-        # SDL not GTK: qemu's GtkGLArea path can't acquire an EGL context on
-        # some Wayland hosts (DMABUF detection fails, epoxy aborts). SDL+GL
-        # works reliably under both X11 and Wayland.
-        "-display sdl,gl=on"
+        # GTK display gives a proper window with a Machine/View menubar
+        # (Machine -> Power Down, etc.) — much better UX than SDL.
+        # Requires nixGL on non-NixOS hosts so qemu can resolve host EGL.
+        "-display gtk,gl=on"
       ];
     };
     # Throwaway VM password — autologin via greetd means this is rarely typed,
