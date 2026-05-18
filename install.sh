@@ -4,10 +4,16 @@
 # Run from inside a booted NixOS installer (minimal ISO is fine). Network must
 # already be up — `nmtui` or DHCP-on-ethernet before this.
 #
-# Usage:
+# Usage, one-shot via curl:
+#   curl -fsSL https://github.com/IhsenBouallegue/nixglass/raw/main/install.sh \
+#     | sudo bash -s /dev/sdX
+#
+# Or local:
 #   sudo bash install.sh /dev/sdX
 #
-# WIPES the target disk completely. Other disks are untouched.
+# WIPES the target disk completely. Other disks are untouched. All interactive
+# prompts (yes/no confirmations, reboot prompt) read from /dev/tty so the
+# `curl | bash` form still asks you instead of consuming the script as input.
 
 set -euo pipefail
 
@@ -53,7 +59,7 @@ echo -e "${RED}${BOLD}This will WIPE EVERYTHING on $TARGET.${RESET}"
 echo -e "  ESP partition  → $ESP   (1 GB FAT32, label NIXBOOT, mounted /boot)"
 echo -e "  Root partition → $ROOT  (rest, ext4, label nixos, mounted /)"
 echo
-read -rp "Type 'yes' to continue, anything else to abort: " ans
+read -rp "Type 'yes' to continue, anything else to abort: " ans </dev/tty
 [[ "$ans" == "yes" ]] || die "aborted"
 
 # ── partition ────────────────────────────────────────────────────────────────
@@ -127,5 +133,5 @@ echo "    Reboot, pull the USB, BIOS boot-menu → pick the new disk."
 echo "    First login: niri starts automatically."
 echo
 echo -e "${BOLD}    reboot now? [y/N]${RESET} "
-read -rp "" ans
+read -rp "" ans </dev/tty
 [[ "$ans" == "y" || "$ans" == "Y" ]] && reboot
