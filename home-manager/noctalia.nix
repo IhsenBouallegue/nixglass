@@ -6,6 +6,14 @@
 }: {
   imports = [inputs.noctalia.homeModules.default];
 
+  # Custom colorscheme ported from omarchy-customizer's theme/matte-candy.
+  # Noctalia's ColorSchemeService scans
+  # ~/.config/noctalia/colorschemes/<Name>/<Name>.json (subdir layout, not
+  # flat) — see Services/Theming/ColorSchemeService.qml in the noctalia
+  # source. The `predefinedScheme` setting below is the basename, "Matte-Candy".
+  xdg.configFile."noctalia/colorschemes/Matte-Candy/Matte-Candy.json".source =
+    ../dotfiles/noctalia/colorschemes/Matte-Candy/Matte-Candy.json;
+
   programs.noctalia-shell = {
     enable = true;
     # Noctalia's default settings have no widgets configured, so no bar
@@ -55,7 +63,28 @@
         };
       };
 
-      colorSchemes.predefinedScheme = "Catppuccin-Lavender";
+      colorSchemes = {
+        predefinedScheme = "Matte-Candy";
+        # Don't auto-derive colors from the wallpaper — that overrides our
+        # custom scheme on every wallpaper change.
+        useWallpaperColors = false;
+        darkMode = true;
+      };
+
+      # Wallpapers live in ~/Pictures/Wallpapers (mounted from
+      # dotfiles/wallpapers via home.file in home.nix). `automationEnabled`
+      # + alphabetical mode rotates through them every 10 minutes for a
+      # screensaver vibe; flip to "single" if you settle on one.
+      wallpaper = {
+        enabled = true;
+        directory = "${config.home.homeDirectory}/Pictures/Wallpapers";
+        setWallpaperOnAllMonitors = true;
+        fillMode = "crop";
+        automationEnabled = true;
+        wallpaperChangeMode = "alphabetical";
+        randomIntervalSec = 600;
+        transitionDuration = 1500;
+      };
     };
   };
 }

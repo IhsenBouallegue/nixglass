@@ -61,8 +61,54 @@
 
   networking.hostName = "nixglass";
 
+  # Bootloader assumptions: hardware-configuration.nix (regenerated at install
+  # time by nixos-generate-config) will declare boot.loader.* for this box —
+  # typically systemd-boot on an EFI system. Nothing to set here until then.
+
+  time.timeZone = "Europe/Berlin";
+  i18n.defaultLocale = "en_US.UTF-8";
+  console.keyMap = "us";
+
   # Niri scrolling tiling compositor (the niri-flake nixosModule is wired in flake.nix).
+  # Pin to niri-unstable so we get ext-background-effect support (blur via
+  # the Wayland staging protocol). niri-stable v25.08 predates that.
   programs.niri.enable = true;
+  programs.niri.package = inputs.niri.packages.${pkgs.system}.niri-unstable;
+
+  # AMD GPU stack. Harmless on the VM (virtio-vga-gl ignores it), required
+  # on bare metal for Vulkan + 32-bit Steam.
+  boot.initrd.kernelModules = ["amdgpu"];
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+    extraPackages = with pkgs; [vulkan-tools libva-utils];
+  };
+
+  # Wayland glue.
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-gtk
+      xdg-desktop-portal-gnome
+    ];
+    config.niri.default = ["gnome" "gtk"];
+  };
+  security.polkit.enable = true;
+  programs.dconf.enable = true;
+  services.gvfs.enable = true;
+
+  # PAM entry for Noctalia's lock screen — without this, the lock UI can't
+  # authenticate and you get stuck on it. See CLAUDE.md.
+  security.pam.services.noctalia-lock = {};
+
+  # Gaming stack (target stack in CLAUDE.md). gamemode enables CPU governor
+  # tweaks for foreground games; no extra group membership needed in 1.6+.
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+    localNetworkGameTransfers.openFirewall = true;
+  };
+  programs.gamemode.enable = true;
 
   # Autologin to niri via greetd. No greeter UI — initial_session fires automatically.
   # Bare metal and VM both autologin; throwaway by design for a single-user workstation.
@@ -96,7 +142,30 @@
   # simplest and ensures other apps (zen, noctalia later) see the same set.
   fonts.packages = with pkgs; [
     jetbrains-mono
+    nerd-fonts.caskaydia-cove
+    noto-fonts
+    noto-fonts-cjk-sans
+    noto-fonts-color-emoji
   ];
+
+  # Icon theme available to GTK/Qt apps system-wide.
+  environment.systemPackages = with pkgs; [papirus-icon-theme];
+
+  # Crisp font rendering on the G9 (110 DPI, RGB subpixel order). "slight"
+  # hinting preserves shape without the chunky blockiness of "full"; RGB
+  # subpixel + the default lcdfilter is the standard recipe for modern LCDs.
+  fonts.fontconfig = {
+    antialias = true;
+    hinting = {
+      enable = true;
+      style = "slight";
+      autohint = false;
+    };
+    subpixel = {
+      rgba = "rgb";
+      lcdfilter = "default";
+    };
+  };
 
   # VM-only overrides for `nixos-rebuild build-vm --flake .#nixglass`.
   # The vmVariant is automatically derived from this same host — no separate hostname.

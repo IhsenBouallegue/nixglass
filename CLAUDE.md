@@ -4,9 +4,9 @@ NixOS + flakes + Home Manager config. Migration target from Omarchy (Arch + Hypr
 
 ## Status
 
-Scaffolded from `Misterio77/nix-starter-configs#standard` (NixOS 25.11). Hostname `nixglass`, user `ihsen`. `flake check` passes. VM boots to niri with a Ghostty terminal and a Noctalia top bar (Catppuccin-Lavender preset). No zen / nvim modules yet.
+Scaffolded from `Misterio77/nix-starter-configs#standard` (NixOS 25.11). Hostname `nixglass`, user `ihsen`. `flake check` passes; VM builds clean. VM boots to niri with Ghostty, Noctalia bar (Catppuccin-Lavender preset), zen, declarative neovim + zellij, plus the full daily-driver app set (bitwarden, anki, discord, cursor, bambu-studio) and gaming stack (Steam, Lutris, Mangohud, Gamemode). AMD GPU + 32-bit Vulkan + `xdg.portal` (gnome+gtk) + polkit (lxqt agent autostarted from niri) + dconf + gvfs are configured at the system level. Niri keybinds cover screenshot (`Mod+Shift+S`, plus `Print` / `Mod+Print` / `Ctrl+Print` for region/screen/window — all via `niri msg action`), audio (`wpctl`), brightness (`brightnessctl`), media (`playerctl`), and Noctalia lock (`Mod+Ctrl+L`). The G9 output is pinned to 5120x1440@240 with VRR (connector name `DP-1`; rename after `niri msg outputs` on bare metal if the box reports a different one). Zellij is pulled from the unstable overlay because nixpkgs-25.11's 0.44.1 needs rustc 1.92.
 
-`nixos/hardware-configuration.nix` is a placeholder. Regenerate at install time via `nixos-generate-config --root /mnt`.
+`nixos/hardware-configuration.nix` is still a placeholder — it also provides the `boot.loader.*` stanza, which is the only system-level config we deliberately don't author. Regenerate at install time via `nixos-generate-config --root /mnt` and copy it in.
 
 ## Topology — ONE host, not two
 
@@ -109,7 +109,7 @@ Reference: https://github.com/noctalia-dev/noctalia-shell/issues/2214
 - `configs/ghostty/config` → non-color bits as nix module; colors come from Noctalia
 - `configs/zellij/` → declarative via home-manager
 - `configs/mako/` → noctalia notification handler
-- `theme/matte-candy/colors.toml` → `dotfiles/noctalia/colorschemes/matte-candy.json`
+- `theme/matte-candy/colors.toml` → `dotfiles/noctalia/colorschemes/Matte-Candy/Matte-Candy.json` (subdir layout — Noctalia's `ColorSchemeService` scans with `-mindepth 2 -name "*.json"`, a flat `matte-candy.json` will not be picked up)
 - `packages.txt` → system packages list
 
 The bambustudio/cursor/discord packages are unfree — `allowUnfree = true` is already set.
@@ -119,9 +119,9 @@ The bambustudio/cursor/discord packages are unfree — `allowUnfree = true` is a
 1. ✅ Install Nix (Determinate official upstream installer) on the Arch host.
 2. ✅ Scaffold flake from Misterio77 standard. Rename, fill FIXMEs.
 3. ✅ Add niri-flake input + greetd autologin + vmVariant overrides. VM boots to empty niri session.
-4. ⏳ Add noctalia input, plus home modules for ghostty, neovim, and niri keybinds/spawn-at-startup. Iterate via VM build until niri+noctalia+zen+ghostty+nvim all work.
-5. ⏳ Boot NixOS installer ISO on this box, generate hardware-config, `nixos-install`.
-6. ⏳ Iterate post-install for 1–2 weeks.
+4. ✅ Add noctalia input, plus home modules for ghostty, zen, neovim, zellij, and niri keybinds/spawn-at-startup. AMD GPU + portal + polkit + gaming stack at the system level. VM builds; all daily-driver apps land.
+5. ⏳ Boot NixOS installer ISO on this box, generate hardware-config, `nixos-install`. Verify the G9 connector name and adjust `outputs."DP-1"` if needed.
+6. ⏳ Iterate post-install for 1–2 weeks. Outstanding: switch Noctalia to `mkOutOfStoreSymlink` + seed `dotfiles/noctalia/settings.json`; wire a Noctalia user-template for nvim/zellij so the colorscheme tracks the bar preset (currently the catppuccin-mocha nvim scheme is a hard-coded best-fit, not generated from Matte-Candy).
 
 ## Commands
 

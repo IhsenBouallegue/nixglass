@@ -11,6 +11,9 @@
     ./niri.nix
     ./ghostty.nix
     ./noctalia.nix
+    ./zen.nix
+    ./nvim.nix
+    ./zellij.nix
   ];
 
   nixpkgs = {
@@ -43,9 +46,50 @@
     homeDirectory = "/home/ihsen";
   };
 
-  # Add stuff for your user as you see fit:
-  # programs.neovim.enable = true;
-  # home.packages = with pkgs; [ steam ];
+  home.packages = with pkgs; [
+    # Dev tooling / CLI
+    claude-code
+    jq
+    yq
+    sqlite
+    ncdu
+    ripgrep
+    fd
+
+    # Wayland / niri helpers (referenced by niri keybinds: screenshot, audio,
+    # brightness, media keys, clipboard).
+    grim
+    slurp
+    wl-clipboard
+    brightnessctl
+    playerctl
+    wireplumber # provides wpctl for volume
+
+    # Polkit agent — niri spawns this at startup so GUI sudo prompts work.
+    lxqt.lxqt-policykit
+
+    # Apps
+    bitwarden-desktop
+    anki
+    discord
+    code-cursor
+    bambu-studio
+
+    # Gaming user-side. Steam itself is enabled at the system level.
+    # Pull lutris from unstable — nixpkgs-25.11 is stuck on 0.5.19 while
+    # upstream is on 0.5.22 (Feb 2026). Drop the override when 25.11 catches up.
+    unstablePkgs.lutris
+    winetricks
+    mangohud
+  ];
+
+  # Wallpapers — ported from omarchy-customizer's matte-candy/backgrounds.
+  # Noctalia's WallpaperService defaults to ~/Pictures/Wallpapers, so dropping
+  # them there is enough to make them show up; the noctalia module also pins
+  # `wallpaper.directory` explicitly so a different HOME wouldn't break things.
+  # Whole-directory mount means new files added to dotfiles/wallpapers/ flow
+  # through on the next rebuild.
+  home.file."Pictures/Wallpapers".source = ../dotfiles/wallpapers;
 
   # Enable home-manager and git
   programs.home-manager.enable = true;
