@@ -199,7 +199,7 @@
       initialPassword = "correcthorsebatterystaple";
       isNormalUser = true;
       openssh.authorizedKeys.keys = [
-        # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID4+qeRKKgYLGC86DwKww7i09dlqxH/elJSI+44dkz3d ihsen.bouallegue@proton.me"
       ];
       extraGroups = ["wheel" "networkmanager" "video"];
     };

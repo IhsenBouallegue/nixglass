@@ -93,7 +93,13 @@
 
   # Enable home-manager and git
   programs.home-manager.enable = true;
-  programs.git.enable = true;
+  programs.git = {
+    enable = true;
+    settings.user = {
+      name = "Ihsen Bouallegue";
+      email = "ihsen.bouallegue@proton.me";
+    };
+  };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "25.11";
