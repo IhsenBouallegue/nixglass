@@ -26,10 +26,21 @@
     # nix-rebuild instead of the in-app settings GUI. Revisit when we
     # move to bare-metal and can use mkOutOfStoreSymlink properly.
     settings = {
+      # Pin to the current schema so noctalia skips its startup migrations.
+      # Without this, the HM-managed settings.json (which has no version
+      # field) is treated as v0 and 25+ migrations run on every start,
+      # several of which silently overwrite fields — Migration45 in
+      # particular clobbers `barType` back to "simple" because the legacy
+      # `bar.floating` field isn't present. Bump when noctalia ships a new
+      # Migration<N>.qml past 59; check Commons/Settings.qml in the
+      # noctalia-shell store output. Long-term fix: mkOutOfStoreSymlink
+      # (see CLAUDE.md "Outstanding").
+      settingsVersion = 59;
+
       bar = {
-        density = "default";
+        density = "compact";
         position = "top";
-        barType = "floating";
+        barType = "simple";
         showCapsule = true;
         widgets = {
           left = [

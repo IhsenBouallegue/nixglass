@@ -43,7 +43,7 @@ in {
     # focus border, gentle gaps. App transparency (e.g. ghostty's 0.92 alpha)
     # plus the wallpaper showing through provides the glow.
     layout = {
-      gaps = 10;
+      gaps = 6;
       border = {
         enable = true;
         width = 2;
@@ -195,39 +195,15 @@ in {
 
       # Lock screen via Noctalia IPC. Mod+Shift+L is taken by move-column-right.
       "Mod+Ctrl+L".action = spawn "noctalia-shell" "ipc" "call" "lockScreen" "toggle";
+
+      # Restart noctalia after a nixos-rebuild. Quickshell identifies IPC
+      # instances by their loaded config path, so when the noctalia store
+      # path changes, the running daemon's IPC stops matching and Mod+Space
+      # / Mod+Ctrl+L silently fail (upstream: noctalia-dev/noctalia-shell
+      # #1373). niri spawns the replacement in its own session cgroup, so
+      # no systemd-run / setsid dance is needed. Matches the community
+      # pattern (e.g. ctknightdev/nixos restart-noctalia.sh).
+      "Mod+Shift+R".action = spawn "sh" "-c" "pkill -f /noctalia-shell; pkill -f /quickshell; sleep 0.3; noctalia-shell";
     };
   };
-
-  # Restart noctalia after every home-manager switch so its Quickshell IPC
-  # matches the new nix store path. Without this, `noctalia-shell ipc call …`
-  # (used by Mod+Space / Mod+Ctrl+L) fails with "No running instances" after
-  # rebuilds — Quickshell identifies instances by their loaded QS_CONFIG_PATH,
-  # and after a rebuild the running daemon's path is stale. Upstream tracking:
-  # noctalia-dev/noctalia-shell#1373. Systemd is explicitly deprecated for
-  # noctalia, so an activation-script restart is the recommended pattern.
-  home.activation.restartNoctalia = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    PATH="${pkgs.procps}/bin:${pkgs.gnugrep}/bin:${pkgs.util-linux}/bin:$PATH"
-
-    # Only act inside an interactive Wayland session — `home-manager switch`
-    # from a TTY (e.g. recovery shell) shouldn't try to spawn a GUI daemon.
-    runtimeDir="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-    waylandSocket=""
-    for sock in "$runtimeDir"/wayland-*; do
-      [ -S "$sock" ] && waylandSocket="$sock" && break
-    done
-
-    if [ -n "$waylandSocket" ]; then
-      # Match by QS_CONFIG_PATH so we don't disturb unrelated quickshell
-      # instances the user might be running.
-      for pid in $(pgrep -x quickshell 2>/dev/null || true); do
-        if grep -aqz 'QS_CONFIG_PATH=.*noctalia-shell' /proc/$pid/environ 2>/dev/null; then
-          kill "$pid" 2>/dev/null || true
-        fi
-      done
-      pkill -x noctalia-shell 2>/dev/null || true
-      sleep 0.3
-      setsid -f ${lib.getExe inputs.noctalia.packages.${pkgs.system}.default} \
-        >/tmp/noctalia.log 2>&1 || true
-    fi
-  '';
 }
