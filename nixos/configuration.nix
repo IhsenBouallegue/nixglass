@@ -172,6 +172,52 @@
   # UEFI/SSD/peripheral firmware updates via `fwupdmgr refresh && fwupdmgr update`.
   services.fwupd.enable = true;
 
+  # mDNS / Avahi so `.local` hostnames resolve through the normal libc
+  # resolver path. `nssmdns4` wires `mdns_minimal` into nsswitch;
+  # `openFirewall` lets UDP 5353 in for responses. We don't publish our
+  # own hostname (default).
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
+  # Hard-pin the UGREEN NAS's IPv4. mDNS only returns its IPv6 (`Eveline.local`
+  # advertises an AAAA but no A record), and the NFS export ACL only allows
+  # 192.168.0.0/24 — so we'd be unmountable via the mDNS name. Stable IP
+  # assumes a DHCP reservation on the router; bump this value (or move it to
+  # a static IP on the NAS itself) if the lease ever changes.
+  networking.hosts = {
+    "192.168.0.86" = ["eveline"];
+  };
+
+  # UGREEN NAS data share. UGOS Pro only exposes NFSv3 (v4 mounts get
+  # "No such file or directory" from the server — the pseudoroot isn't wired
+  # up), so we pin nfsvers=3 explicitly. systemd-automount handles lazy
+  # mount on first touch and survives the NAS being offline at boot
+  # (without it, a missing NFS server drops the host into emergency mode).
+  # `idle-timeout` unmounts after 10 min of inactivity; `soft` returns EIO
+  # instead of hanging procs if the NAS goes away mid-session — acceptable
+  # for a media/docs store, switch to `hard` if you ever rely on it for
+  # write-critical data. NixOS sees `nfs` in fsType and pulls in nfs-utils
+  # + rpc-statd (needed for v3 locking) automatically.
+  fileSystems."/mnt/data" = {
+    device = "eveline:/volume1/data";
+    fsType = "nfs";
+    options = [
+      "nfsvers=3"
+      "noatime"
+      "_netdev"
+      "noauto"
+      "x-systemd.automount"
+      "x-systemd.idle-timeout=600"
+      "x-systemd.mount-timeout=10s"
+      "soft"
+      "timeo=150"
+      "retrans=3"
+    ];
+  };
+
   # System-wide fonts. Ghostty's font-family reads from fontconfig, which only
   # sees fonts in fonts.packages or the user's HM font scope. System-wide is
   # simplest and ensures other apps (zen, noctalia later) see the same set.
