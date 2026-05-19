@@ -55,6 +55,7 @@
     ncdu
     ripgrep
     fd
+    zenity
 
     # Wayland / niri helpers (referenced by niri keybinds: screenshot, audio,
     # brightness, media keys, clipboard).
@@ -74,6 +75,7 @@
     discord
     code-cursor
     bambu-studio
+    spotify
 
     # Gaming user-side. Steam itself is enabled at the system level.
     # Pull lutris from unstable — nixpkgs-25.11 is stuck on 0.5.19 while
@@ -82,6 +84,11 @@
     winetricks
     mangohud
   ];
+
+  # Sudo askpass — lets graphical programs (like Claude Code) prompt for password
+  home.sessionVariables.SUDO_ASKPASS = pkgs.writeShellScript "askpass" ''
+    ${pkgs.zenity}/bin/zenity --password --title "sudo password"
+  '';
 
   # Wallpapers — ported from omarchy-customizer's matte-candy/backgrounds.
   # Noctalia's WallpaperService defaults to ~/Pictures/Wallpapers, so dropping

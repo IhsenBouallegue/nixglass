@@ -8,9 +8,10 @@
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: {
-    # example = prev.example.overrideAttrs (oldAttrs: rec {
-    # ...
-    # });
+    claude-code = (import inputs.nixpkgs-unstable {
+      system = final.stdenv.hostPlatform.system;
+      config.allowUnfree = true;
+    }).claude-code;
   };
 
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will
@@ -19,6 +20,11 @@
     unstablePkgs = import inputs.nixpkgs-unstable {
       system = final.stdenv.hostPlatform.system;
       config.allowUnfree = true;
+      overlays = [
+        (uFinal: uPrev: {
+          openldap = uPrev.openldap.overrideAttrs { doCheck = false; };
+        })
+      ];
     };
   };
 }
