@@ -7,11 +7,13 @@
   # This one contains whatever you want to overlay
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
-  modifications = final: prev: {
-    claude-code = (import inputs.nixpkgs-unstable {
+  modifications = final: prev: let
+    unstable = import inputs.nixpkgs-unstable {
       system = final.stdenv.hostPlatform.system;
       config.allowUnfree = true;
-    }).claude-code;
+    };
+  in {
+    inherit (unstable) claude-code gh;
   };
 
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will

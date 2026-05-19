@@ -56,6 +56,7 @@
     ripgrep
     fd
     zenity
+    gh
 
     # Wayland / niri helpers (referenced by niri keybinds: screenshot, audio,
     # brightness, media keys, clipboard).
