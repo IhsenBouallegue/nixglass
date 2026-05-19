@@ -54,9 +54,27 @@
       experimental-features = "nix-command flakes";
       # Opinionated: disable global registry
       flake-registry = "";
+      # Dedupe identical store paths on each build — small CPU cost at build
+      # time for noticeable disk savings as the store grows.
+      auto-optimise-store = true;
     };
     # Opinionated: disable channels
     channel.enable = false;
+  };
+
+  # nh is the modern rebuild wrapper: parallel builds, generation diff via nvd,
+  # nicer streaming output via nix-output-monitor (both pulled in below). It
+  # also owns the gc story via `nh clean` — keeps the last 5 gens and prunes
+  # anything older than 30 days, weekly. Run with `nh os switch` (defaults to
+  # the flake at `programs.nh.flake`).
+  programs.nh = {
+    enable = true;
+    flake = "/home/ihsen/nixglass";
+    clean = {
+      enable = true;
+      dates = "weekly";
+      extraArgs = "--keep-since 30d --keep 5";
+    };
   };
 
   networking.hostName = "nixglass";
@@ -66,6 +84,13 @@
   # typically systemd-boot on an EFI system. Nothing to set here until then.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  # Cap kept generations so /boot doesn't fill up over time — once it does,
+  # the next switch fails partway through with a cryptic ENOSPC and you have
+  # to dig out a rescue shell to clean it. 20 is plenty of rollback runway.
+  boot.loader.systemd-boot.configurationLimit = 20;
+  # Wipe /tmp on boot so leftover build dirs from old nix builds, dropped
+  # editor swap files, etc. don't accumulate across reboots.
+  boot.tmp.cleanOnBoot = true;
   time.timeZone = "Europe/Berlin";
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "us";
@@ -104,12 +129,16 @@
 
   # Gaming stack (target stack in CLAUDE.md). gamemode enables CPU governor
   # tweaks for foreground games; no extra group membership needed in 1.6+.
+  # gamescope is the SteamOS-style nested compositor — useful on the G9 for
+  # locking a game to a target res/refresh independent of the desktop
+  # (Steam launch option: `gamescope -W 5120 -H 1440 -r 240 -- %command%`).
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
     localNetworkGameTransfers.openFirewall = true;
   };
   programs.gamemode.enable = true;
+  programs.gamescope.enable = true;
 
   # Autologin to niri via greetd. No greeter UI — initial_session fires automatically.
   # Bare metal and VM both autologin; throwaway by design for a single-user workstation.
@@ -138,6 +167,11 @@
   services.power-profiles-daemon.enable = true;
   services.upower.enable = true;
 
+  # SSD weekly TRIM — keeps write performance healthy over time.
+  services.fstrim.enable = true;
+  # UEFI/SSD/peripheral firmware updates via `fwupdmgr refresh && fwupdmgr update`.
+  services.fwupd.enable = true;
+
   # System-wide fonts. Ghostty's font-family reads from fontconfig, which only
   # sees fonts in fonts.packages or the user's HM font scope. System-wide is
   # simplest and ensures other apps (zen, noctalia later) see the same set.
@@ -149,8 +183,13 @@
     noto-fonts-color-emoji
   ];
 
-  # Icon theme available to GTK/Qt apps system-wide.
-  environment.systemPackages = with pkgs; [papirus-icon-theme];
+  # System-wide packages: icon theme for GTK/Qt apps, plus nh's helpers
+  # (nom = streaming build output, nvd = generation diff).
+  environment.systemPackages = with pkgs; [
+    papirus-icon-theme
+    nix-output-monitor
+    nvd
+  ];
 
   # Crisp font rendering on the G9 (110 DPI, RGB subpixel order). "slight"
   # hinting preserves shape without the chunky blockiness of "full"; RGB

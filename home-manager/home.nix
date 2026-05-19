@@ -79,9 +79,10 @@
     spotify
 
     # Gaming user-side. Steam itself is enabled at the system level.
-    # Pull lutris from unstable — nixpkgs-25.11 is stuck on 0.5.19 while
-    # upstream is on 0.5.22 (Feb 2026). Drop the override when 25.11 catches up.
-    unstablePkgs.lutris
+    # lutris/zellij come from unstable via the inherit overlay in
+    # overlays/default.nix — nixpkgs-25.11 lags upstream. Drop the inherits
+    # when stable catches up.
+    lutris
     winetricks
     mangohud
   ];
@@ -133,6 +134,31 @@
       name = "Ihsen Bouallegue";
       email = "ihsen.bouallegue@proton.me";
     };
+  };
+
+  # Bash is HM-managed so the integration hooks below (direnv, zoxide, fzf,
+  # eza aliases) attach themselves to ~/.bashrc. We had no prior bashrc, so
+  # there's nothing to preserve — start from HM defaults.
+  programs.bash.enable = true;
+
+  # Per-project nix shells: drop an `.envrc` with `use flake` and the shell
+  # is loaded automatically when you `cd` in. nix-direnv adds caching so the
+  # eval isn't re-run on every cd.
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
+
+  # Modern CLI replacements. All wire into bash via their HM modules (no
+  # manual aliasing needed): `z <dir>` for zoxide, `Ctrl-R` for fzf history,
+  # `cat`-as-bat with syntax highlighting, `eza` (with --git aliases).
+  programs.zoxide.enable = true;
+  programs.fzf.enable = true;
+  programs.bat.enable = true;
+  programs.eza = {
+    enable = true;
+    git = true;
+    icons = "auto";
   };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
