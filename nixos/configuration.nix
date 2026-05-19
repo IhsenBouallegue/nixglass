@@ -64,7 +64,8 @@
   # Bootloader assumptions: hardware-configuration.nix (regenerated at install
   # time by nixos-generate-config) will declare boot.loader.* for this box —
   # typically systemd-boot on an EFI system. Nothing to set here until then.
-
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
   time.timeZone = "Europe/Berlin";
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "us";
