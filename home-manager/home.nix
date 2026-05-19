@@ -86,10 +86,25 @@
     mangohud
   ];
 
-  # Sudo askpass — lets graphical programs (like Claude Code) prompt for password
+  # Sudo askpass — lets graphical programs (like Claude Code) prompt for password.
+  # BROWSER is set automatically by the zen-browser module's setAsDefaultBrowser.
   home.sessionVariables.SUDO_ASKPASS = pkgs.writeShellScript "askpass" ''
     ${pkgs.zenity}/bin/zenity --password --title "sudo password"
   '';
+
+  # Declarative URL/mime defaults — Zen's setAsDefaultBrowser sets these at
+  # runtime, but pinning them here means a fresh machine has them on first boot
+  # too. The desktop file name follows the zen-browser-flake variant (twilight).
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "text/html" = "zen-twilight.desktop";
+      "x-scheme-handler/http" = "zen-twilight.desktop";
+      "x-scheme-handler/https" = "zen-twilight.desktop";
+      "x-scheme-handler/about" = "zen-twilight.desktop";
+      "x-scheme-handler/unknown" = "zen-twilight.desktop";
+    };
+  };
 
   # Wallpapers — ported from omarchy-customizer's matte-candy/backgrounds.
   # Noctalia's WallpaperService defaults to ~/Pictures/Wallpapers, so dropping

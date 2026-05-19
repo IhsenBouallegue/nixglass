@@ -87,6 +87,10 @@
             home-manager.useUserPackages = true;
             home-manager.extraSpecialArgs = {inherit inputs;};
             home-manager.users.ihsen = import ./home-manager/home.nix;
+            # Move conflicting pre-existing files to *.backup instead of failing
+            # activation. Mostly matters for files apps write at runtime that we
+            # later start declaring (e.g. ~/.config/mimeapps.list).
+            home-manager.backupFileExtension = "backup";
           }
           # > Our main nixos configuration file <
           ./nixos/configuration.nix
