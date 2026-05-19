@@ -98,11 +98,22 @@
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
+      # Web browser handlers
       "text/html" = "zen-twilight.desktop";
+      "application/xhtml+xml" = "zen-twilight.desktop";
+      "application/x-extension-htm" = "zen-twilight.desktop";
+      "application/x-extension-html" = "zen-twilight.desktop";
+      "application/x-extension-shtml" = "zen-twilight.desktop";
+      "application/x-extension-xhtml" = "zen-twilight.desktop";
+      "application/x-extension-xht" = "zen-twilight.desktop";
       "x-scheme-handler/http" = "zen-twilight.desktop";
       "x-scheme-handler/https" = "zen-twilight.desktop";
       "x-scheme-handler/about" = "zen-twilight.desktop";
       "x-scheme-handler/unknown" = "zen-twilight.desktop";
+      "x-scheme-handler/chrome" = "zen-twilight.desktop";
+
+      # Claude Code deep-link handler (claude-cli:// URLs from shared conversations)
+      "x-scheme-handler/claude-cli" = "claude-code-url-handler.desktop";
     };
   };
 
