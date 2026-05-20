@@ -188,6 +188,17 @@ in {
     tagrule=id:8,layout_name:tile
     tagrule=id:9,layout_name:tile
 
+    # DankMaterialShell integration — DMS writes monitor/output rules,
+    # palette, and gaps/radius to these files when its settings panel
+    # changes. Mango's parser supports `source=` (require) and
+    # `source-optional=` (skip if missing); use the optional form because
+    # DMS creates each file lazily on first change. Without these
+    # includes, DMS shows "Outputs Include Missing" in its display settings.
+    # https://danklinux.com/docs/dankmaterialshell/compositors
+    source-optional=~/.config/mango/dms/outputs.conf
+    source-optional=~/.config/mango/dms/colors.conf
+    source-optional=~/.config/mango/dms/layout.conf
+
     # Autostart — runs once via spawn_shell (sh -c) when mango starts.
     # DankMaterialShell provides bar, launcher (spotlight), control center,
     # dashboard, notifications, lock.
