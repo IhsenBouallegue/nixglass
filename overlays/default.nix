@@ -25,10 +25,25 @@ in {
   # `pkgs.lutris` and get the unstable build transparently. Add more
   # packages here as nixpkgs-25.11 lags upstream — drop them when stable
   # catches up.
+  #
+  # mangowc gets an explicit override on top of unstable's 0.12.8 — upstream
+  # (mangowm/mango) is on 0.13.1 (2026-05-18) and nixpkgs-unstable hasn't
+  # bumped yet. Drop the override and add `mangowc` back to the `inherit`
+  # line once nixpkgs catches up.
   modifications = final: _prev: let
     unstable = mkUnstable final.stdenv.hostPlatform.system;
   in {
-    inherit (unstable) claude-code gh lutris zellij mangowc quickshell;
+    inherit (unstable) claude-code gh lutris zellij quickshell;
+
+    mangowc = unstable.mangowc.overrideAttrs (_old: {
+      version = "0.13.1";
+      src = final.fetchFromGitHub {
+        owner = "mangowm";
+        repo = "mango";
+        tag = "0.13.1";
+        hash = "sha256-HohogY2Ec/JyACrQzGtG2GL7D4K5b0Mg5gBBlJXW/2s=";
+      };
+    });
   };
 
   # Escape hatch: exposes the entire unstable nixpkgs at `pkgs.unstablePkgs.*`
