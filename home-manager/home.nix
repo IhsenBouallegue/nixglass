@@ -98,6 +98,19 @@
     ${pkgs.zenity}/bin/zenity --password --title "sudo password"
   '';
 
+  # Cursor theme — sets XCURSOR_THEME/SIZE for Wayland (mango reads these on
+  # session start), the GTK cursor-theme-name, and the Qt cursor. DMS's
+  # cursorSettings.theme = "System Default" follows XCURSOR_THEME. Size kept
+  # in lockstep with mango's `cursor_size=24` in home-manager/mango.nix.
+  home.pointerCursor = {
+    enable = true;
+    name = "Bibata-Modern-Classic";
+    package = pkgs.bibata-cursors;
+    size = 24;
+    gtk.enable = true;
+    x11.enable = true;
+  };
+
   # Declarative URL/mime defaults — Zen's setAsDefaultBrowser sets these at
   # runtime, but pinning them here means a fresh machine has them on first boot
   # too. The desktop file name follows the zen-browser-flake variant (twilight).
