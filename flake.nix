@@ -1,5 +1,5 @@
 {
-  description = "nixglass — NixOS + Niri + Noctalia config (migration from Omarchy)";
+  description = "nixglass — NixOS + Mango + DankMaterialShell config (migration from Omarchy)";
 
   inputs = {
     # Nixpkgs
@@ -13,25 +13,27 @@
     home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Niri scrolling tiling compositor. We pin to niri-flake HEAD; the actual
-    # niri package is overridden to `niri-unstable` in nixos/configuration.nix
-    # so we get ext-background-effect (blur protocol) support — stable v25.08
-    # doesn't have it.
-    niri.url = "github:sodiboo/niri-flake";
-    niri.inputs.nixpkgs.follows = "nixpkgs";
-    niri.inputs.nixpkgs-stable.follows = "nixpkgs";
-
-    # Ghostty from upstream. nixpkgs ships v1.3.1, which was tagged
-    # 2026-03-13 — four days BEFORE commit 9e2e99c added the
-    # ext-background-effect-v1 protocol bindings that let niri actually blur
-    # the surface behind ghostty. Using upstream's flake gets us a 1.3.2-dev
-    # build that includes the protocol.
+    # Ghostty from upstream. nixpkgs ships v1.3.1; upstream HEAD has the
+    # ext-background-effect-v1 protocol bindings (added commit 9e2e99c)
+    # that let compositors with that protocol blur the surface behind
+    # ghostty. mango does its own blur compositor-side rather than
+    # advertising the protocol, but this build is still useful for
+    # general bug fixes.
     ghostty.url = "github:ghostty-org/ghostty";
     ghostty.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
-    # Noctalia desktop shell — bar, launcher, notifications, theming engine
-    noctalia.url = "github:noctalia-dev/noctalia-shell";
-    noctalia.inputs.nixpkgs.follows = "nixpkgs";
+    # DankMaterialShell — quickshell-based desktop shell (bar, launcher,
+    # control center, dashboard, notifications, lock).
+    dms.url = "github:AvengeMedia/DankMaterialShell";
+    dms.inputs.nixpkgs.follows = "nixpkgs";
+
+    # dgop — companion CLI for DMS's system-monitor widgets. The dms
+    # home-manager module reads `programs.dank-material-shell.dgop.package`,
+    # which defaults to `pkgs.dgop` (not in nixpkgs). Pulling from the
+    # upstream flake and wiring the package explicitly (see
+    # home-manager/dms.nix) avoids adding it to the global overlay.
+    dgop.url = "github:AvengeMedia/dgop";
+    dgop.inputs.nixpkgs.follows = "nixpkgs";
 
     # Zen browser — community flake; not in nixpkgs.
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
@@ -79,7 +81,6 @@
       nixglass = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs;};
         modules = [
-          inputs.niri.nixosModules.niri
           inputs.home-manager.nixosModules.home-manager
           {
             # Not useGlobalPkgs — home.nix declares its own nixpkgs overlays/config,

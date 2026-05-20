@@ -8,9 +8,9 @@
   ...
 }: {
   imports = [
-    ./niri.nix
+    ./mango.nix
     ./ghostty.nix
-    ./noctalia.nix
+    ./dms.nix
     ./zen.nix
     ./nvim.nix
     ./zellij.nix
@@ -58,7 +58,7 @@
     zenity
     gh
 
-    # Wayland / niri helpers (referenced by niri keybinds: screenshot, audio,
+    # Wayland helpers used by mango keybinds and DMS (screenshot, audio,
     # brightness, media keys, clipboard).
     grim
     slurp
@@ -67,8 +67,11 @@
     playerctl
     wireplumber # provides wpctl for volume
 
-    # Polkit agent — niri spawns this at startup so GUI sudo prompts work.
+    # Polkit agent — mango spawns this at startup so GUI sudo prompts work.
     lxqt.lxqt-policykit
+
+    # Terminals
+    foot # trial alongside ghostty — minimalist Wayland-native terminal
 
     # Apps
     bitwarden-desktop
@@ -85,6 +88,7 @@
     lutris
     winetricks
     mangohud
+    protonup-qt # GUI to install/manage GE-Proton, UMU-Proton, Luxtorpeda
   ];
 
   # Sudo askpass — lets graphical programs (like Claude Code) prompt for password.
@@ -119,11 +123,8 @@
   };
 
   # Wallpapers — ported from omarchy-customizer's matte-candy/backgrounds.
-  # Noctalia's WallpaperService defaults to ~/Pictures/Wallpapers, so dropping
-  # them there is enough to make them show up; the noctalia module also pins
-  # `wallpaper.directory` explicitly so a different HOME wouldn't break things.
-  # Whole-directory mount means new files added to dotfiles/wallpapers/ flow
-  # through on the next rebuild.
+  # New files dropped into dotfiles/wallpapers/ flow through on the next
+  # rebuild.
   home.file."Pictures/Wallpapers".source = ../dotfiles/wallpapers;
 
   # Enable home-manager and git
@@ -139,7 +140,12 @@
   # Bash is HM-managed so the integration hooks below (direnv, zoxide, fzf,
   # eza aliases) attach themselves to ~/.bashrc. We had no prior bashrc, so
   # there's nothing to preserve — start from HM defaults.
-  programs.bash.enable = true;
+  programs.bash = {
+    enable = true;
+    shellAliases = {
+      cx = "claude --dangerously-skip-permissions";
+    };
+  };
 
   # Per-project nix shells: drop an `.envrc` with `use flake` and the shell
   # is loaded automatically when you `cd` in. nix-direnv adds caching so the

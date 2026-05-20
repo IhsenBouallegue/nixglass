@@ -7,9 +7,8 @@
 
     profiles.default = {
       settings = {
-        # Required so Noctalia's themed userChrome.css / userContent.css
-        # (when we wire it later) actually take effect — without this flag,
-        # Zen ignores user stylesheets.
+        # Allow custom userChrome.css / userContent.css to take effect.
+        # Without this flag Zen ignores user stylesheets.
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
 
         # Force dark mode end-to-end: dark chrome (toolbar + content area)

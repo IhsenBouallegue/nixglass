@@ -1,0 +1,296 @@
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  # Use the same Ghostty home-manager configures (upstream flake HEAD), not
+  # nixpkgs stable. Mixing the two binaries causes a slow-start collision:
+  # the HM-built one registers on D-Bus with --gtk-single-instance=true while
+  # `pkgs.ghostty` (1.3.1) launches with --gtk-single-instance=false, and the
+  # two app-id paths fight on every spawn.
+  ghosttyPkg = config.programs.ghostty.package;
+in {
+  # mango (dwl-fork wlroots compositor) — the daily-driver compositor,
+  # launched by greetd autologin (see nixos/configuration.nix).
+  #
+  # mango is minimalist by design: no bar, no launcher, no wallpaper out of
+  # the box. DankMaterialShell (DMS) provides all of that; the
+  # `exec-once=dms run` line below brings it up with the session.
+  #
+  # mango reads ~/.config/mango/config.conf if present (fully replaces the
+  # store's /etc/mango/config.conf — no merge; src/config/parse_config.h
+  # in upstream confirms this), and runs `exec-once=` lines from it on
+  # session start.
+
+  # Full mango config, derived from the upstream default
+  # (https://github.com/mangowm/mango/blob/main/assets/config.conf) with
+  # three deltas:
+  #   - `bind=Alt,Return,spawn,...` → ghostty (was foot)
+  #   - `bind=Alt,space,spawn,...` → DMS spotlight IPC (was rofi)
+  #   - `exec-once=dms run` so the bar/launcher/notifications start with
+  #     the session.
+  # Bump in lockstep when mango ships breaking config changes.
+  home.file.".config/mango/config.conf".text = ''
+    # More option see https://github.com/DreamMaoMao/mango/wiki/
+
+    # Window effect — blur on windows only. blur_layer stays 0 to avoid
+    # blurring layer-shell surfaces (DMS bar/launcher), which would paint
+    # a blurred strip behind them. See
+    # https://mangowm.github.io/docs/visuals/effects.
+    blur=1
+    blur_layer=0
+    blur_optimized=1
+    blur_params_num_passes = 2
+    blur_params_radius = 5
+    blur_params_noise = 0.02
+    blur_params_brightness = 0.9
+    blur_params_contrast = 0.9
+    blur_params_saturation = 1.2
+
+    shadows = 0
+    layer_shadows = 0
+    shadow_only_floating = 1
+    shadows_size = 10
+    shadows_blur = 15
+    shadows_position_x = 0
+    shadows_position_y = 0
+    shadowscolor= 0x000000ff
+
+    border_radius=6
+    no_radius_when_single=0
+    focused_opacity=1.0
+    unfocused_opacity=1.0
+
+    # Animation Configuration(support type:zoom,slide)
+    animations=1
+    layer_animations=1
+    animation_type_open=slide
+    animation_type_close=slide
+    animation_fade_in=1
+    animation_fade_out=1
+    tag_animation_direction=1
+    zoom_initial_ratio=0.4
+    zoom_end_ratio=0.8
+    fadein_begin_opacity=0.5
+    fadeout_begin_opacity=0.8
+    animation_duration_move=500
+    animation_duration_open=400
+    animation_duration_tag=350
+    animation_duration_close=800
+    animation_duration_focus=0
+    animation_curve_open=0.46,1.0,0.29,1
+    animation_curve_move=0.46,1.0,0.29,1
+    animation_curve_tag=0.46,1.0,0.29,1
+    animation_curve_close=0.08,0.92,0,1
+    animation_curve_focus=0.46,1.0,0.29,1
+    animation_curve_opafadeout=0.5,0.5,0.5,0.5
+    animation_curve_opafadein=0.46,1.0,0.29,1
+
+    # Scroller Layout Setting
+    scroller_structs=20
+    scroller_default_proportion=0.8
+    scroller_focus_center=0
+    scroller_prefer_center=0
+    edge_scroller_pointer_focus=1
+    scroller_default_proportion_single=1.0
+    scroller_proportion_preset=0.5,0.8,1.0
+
+    # Master-Stack Layout Setting
+    new_is_master=1
+    default_mfact=0.55
+    default_nmaster=1
+    smartgaps=0
+
+    # Overview Setting
+    hotarea_size=10
+    enable_hotarea=1
+    ov_tab_mode=0
+    overviewgappi=5
+    overviewgappo=30
+
+    # Misc
+    no_border_when_single=0
+    axis_bind_apply_timeout=100
+    focus_on_activate=1
+    idleinhibit_ignore_visible=0
+    sloppyfocus=1
+    warpcursor=1
+    focus_cross_monitor=0
+    focus_cross_tag=0
+    enable_floating_snap=0
+    snap_distance=30
+    cursor_size=24
+    drag_tile_to_tile=1
+
+    # keyboard
+    repeat_rate=25
+    repeat_delay=600
+    numlockon=0
+    xkb_rules_layout=us
+
+    # Trackpad
+    disable_trackpad=0
+    tap_to_click=1
+    tap_and_drag=1
+    drag_lock=1
+    trackpad_natural_scrolling=1
+    disable_while_typing=1
+    left_handed=0
+    middle_button_emulation=0
+    swipe_min_threshold=1
+
+    # mouse
+    mouse_natural_scrolling=0
+
+    # Appearance — gaps/borders/radius mirror upstream defaults; only the
+    # matte-candy palette is applied:
+    #   focuscolor   = accent red    (#e65c5c)
+    #   bordercolor  = inactive gray (#404040)
+    #   urgentcolor  = attention yellow
+    gappih=5
+    gappiv=5
+    gappoh=10
+    gappov=10
+    scratchpad_width_ratio=0.8
+    scratchpad_height_ratio=0.9
+    borderpx=4
+    rootcolor=0x201b14ff
+    bordercolor=0x404040ff
+    focuscolor=0xe65c5cff
+    maximizescreencolor=0x89aa61ff
+    urgentcolor=0xffcc66ff
+    scratchpadcolor=0x516c93ff
+    globalcolor=0xb153a7ff
+    overlaycolor=0x14a57cff
+
+    # layout
+    tagrule=id:1,layout_name:tile
+    tagrule=id:2,layout_name:tile
+    tagrule=id:3,layout_name:tile
+    tagrule=id:4,layout_name:tile
+    tagrule=id:5,layout_name:tile
+    tagrule=id:6,layout_name:tile
+    tagrule=id:7,layout_name:tile
+    tagrule=id:8,layout_name:tile
+    tagrule=id:9,layout_name:tile
+
+    # Autostart — runs once via spawn_shell (sh -c) when mango starts.
+    # DankMaterialShell provides bar, launcher (spotlight), control center,
+    # dashboard, notifications, lock.
+    exec-once=${config.programs.dank-material-shell.package}/bin/dms run
+
+    # Polkit authentication agent — required for any GUI app that prompts
+    # for elevated privileges (Bitwarden unlock, gvfs mount helpers, etc.).
+    # Without this, those prompts silently fail to appear.
+    exec-once=${pkgs.lxqt.lxqt-policykit}/bin/lxqt-policykit-agent
+
+    # Key Bindings
+    bind=SUPER,r,reload_config
+
+    # menu and terminal — overridden from upstream's foot/rofi (neither
+    # installed on this system). Ghostty is the daily-driver terminal;
+    # DMS's spotlight IPC takes the rofi slot.
+    #
+    # Use the HM-configured ghostty package (upstream flake HEAD) so we
+    # don't launch two different ghostty builds that contend on D-Bus.
+    bind=Alt,Return,spawn,${lib.getExe ghosttyPkg}
+    bind=Alt,space,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call spotlight toggle
+
+    # exit
+    bind=SUPER,m,quit
+    bind=ALT,q,killclient,
+
+    # switch window focus
+    bind=SUPER,Tab,focusstack,next
+    bind=ALT,Left,focusdir,left
+    bind=ALT,Right,focusdir,right
+    bind=ALT,Up,focusdir,up
+    bind=ALT,Down,focusdir,down
+
+    # swap window
+    bind=SUPER+SHIFT,Up,exchange_client,up
+    bind=SUPER+SHIFT,Down,exchange_client,down
+    bind=SUPER+SHIFT,Left,exchange_client,left
+    bind=SUPER+SHIFT,Right,exchange_client,right
+
+    # switch window status
+    bind=SUPER,g,toggleglobal,
+    bind=ALT,Tab,toggleoverview,
+    bind=ALT,backslash,togglefloating,
+    bind=ALT,a,togglemaximizescreen,
+    bind=ALT,f,togglefullscreen,
+    bind=ALT+SHIFT,f,togglefakefullscreen,
+    bind=SUPER,i,minimized,
+    bind=SUPER,o,toggleoverlay,
+    bind=SUPER+SHIFT,I,restore_minimized
+    bind=ALT,z,toggle_scratchpad
+
+    # scroller layout
+    bind=ALT,e,set_proportion,1.0
+    bind=ALT,x,switch_proportion_preset,
+
+    # switch layout
+    bind=SUPER,n,switch_layout
+
+    # tag switch
+    bind=SUPER,Left,viewtoleft,0
+    bind=CTRL,Left,viewtoleft_have_client,0
+    bind=SUPER,Right,viewtoright,0
+    bind=CTRL,Right,viewtoright_have_client,0
+    bind=CTRL+SUPER,Left,tagtoleft,0
+    bind=CTRL+SUPER,Right,tagtoright,0
+
+    bind=Ctrl,1,view,1,0
+    bind=Ctrl,2,view,2,0
+    bind=Ctrl,3,view,3,0
+    bind=Ctrl,4,view,4,0
+    bind=Ctrl,5,view,5,0
+    bind=Ctrl,6,view,6,0
+    bind=Ctrl,7,view,7,0
+    bind=Ctrl,8,view,8,0
+    bind=Ctrl,9,view,9,0
+
+    bind=Alt,1,tag,1,0
+    bind=Alt,2,tag,2,0
+    bind=Alt,3,tag,3,0
+    bind=Alt,4,tag,4,0
+    bind=Alt,5,tag,5,0
+    bind=Alt,6,tag,6,0
+    bind=Alt,7,tag,7,0
+    bind=Alt,8,tag,8,0
+    bind=Alt,9,tag,9,0
+
+    # monitor switch
+    bind=alt+shift,Left,focusmon,left
+    bind=alt+shift,Right,focusmon,right
+    bind=SUPER+Alt,Left,tagmon,left
+    bind=SUPER+Alt,Right,tagmon,right
+
+    # gaps
+    bind=ALT+SHIFT,X,incgaps,1
+    bind=ALT+SHIFT,Z,incgaps,-1
+    bind=ALT+SHIFT,R,togglegaps
+
+    # movewin
+    bind=CTRL+SHIFT,Up,movewin,+0,-50
+    bind=CTRL+SHIFT,Down,movewin,+0,+50
+    bind=CTRL+SHIFT,Left,movewin,-50,+0
+    bind=CTRL+SHIFT,Right,movewin,+50,+0
+
+    # resizewin
+    bind=CTRL+ALT,Up,resizewin,+0,-50
+    bind=CTRL+ALT,Down,resizewin,+0,+50
+    bind=CTRL+ALT,Left,resizewin,-50,+0
+    bind=CTRL+ALT,Right,resizewin,+50,+0
+
+    # Mouse Button Bindings
+    mousebind=SUPER,btn_left,moveresize,curmove
+    mousebind=NONE,btn_middle,togglemaximizescreen,0
+    mousebind=SUPER,btn_right,moveresize,curresize
+
+    # Axis Bindings
+    axisbind=SUPER,UP,viewtoleft_have_client
+    axisbind=SUPER,DOWN,viewtoright_have_client
+  '';
+}

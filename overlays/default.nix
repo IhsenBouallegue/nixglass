@@ -28,7 +28,7 @@ in {
   modifications = final: _prev: let
     unstable = mkUnstable final.stdenv.hostPlatform.system;
   in {
-    inherit (unstable) claude-code gh lutris zellij;
+    inherit (unstable) claude-code gh lutris zellij mangowc quickshell;
   };
 
   # Escape hatch: exposes the entire unstable nixpkgs at `pkgs.unstablePkgs.*`

@@ -5,15 +5,9 @@
 }: {
   programs.ghostty = {
     enable = true;
-    # Upstream ghostty flake — needed for ext-background-effect-v1 (the
-    # protocol nixpkgs v1.3.1 doesn't have; landed 4d after that tag).
+    # Upstream ghostty flake — newer than the nixpkgs-25.11 1.3.1 pin. Drop
+    # the override (use `pkgs.ghostty`) once nixpkgs catches up.
     package = inputs.ghostty.packages.${pkgs.system}.default;
-    # Matte-candy palette inlined. We don't route through Noctalia's template
-    # processor: home-manager owns ~/.config/ghostty/* as /nix/store symlinks,
-    # so any file Noctalia tries to write there is silently dropped (the
-    # ownership-boundary problem CLAUDE.md flags). Keeping colours here is
-    # the pragmatic fix until we move noctalia out of /nix/store via
-    # mkOutOfStoreSymlink.
     settings = {
       # Font
       font-family = "JetBrainsMono Nerd Font";
@@ -34,13 +28,12 @@
       confirm-close-surface = false;
       resize-overlay = "never";
 
-      # Transparency + real blur via ext-background-effect-v1. niri-unstable
-      # implements the compositor side; ghostty's GTK build announces the
-      # blur intent for its surface, niri composites the gaussian blur
-      # behind it. 20 is the ghostty default "looks good" intensity.
+      # Transparency. background-blur would require the compositor to
+      # implement ext-background-effect-v1 (niri-unstable did, mango does
+      # not), so we rely on mango's compositor-side blur from mango.nix
+      # for the blurred-behind effect instead.
       background-opacity = 0.92;
       unfocused-split-opacity = 0.85;
-      background-blur = 20;
 
       # Cursor
       cursor-style = "block";
@@ -52,7 +45,7 @@
       shell-integration = "detect";
       shell-integration-features = "no-cursor,ssh-env";
 
-      # Matte-candy (Ayaka) palette — matches dotfiles/noctalia/colorschemes/Matte-Candy.
+      # Matte-candy (Ayaka) palette.
       background = "060c10";
       foreground = "e6e6e6";
       cursor-color = "ffcc66";

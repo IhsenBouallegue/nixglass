@@ -6,7 +6,7 @@
     # Drop the inherit when 25.11 catches up.
     package = pkgs.zellij;
     # Defer to keybind/theme defaults for now; layout/theme tweaks slot in here
-    # later. Themes match Noctalia's preset via a user-template (TODO).
+    # later.
     settings = {
       default_shell = "bash";
       copy_command = "wl-copy";

@@ -1,9 +1,7 @@
 {pkgs, ...}: {
   # Starter declarative neovim. CLAUDE.md targets "full config declarative" —
   # this is the baseline; LSPs / DAP / per-language tweaks get layered on as
-  # they come up. Colorscheme is catppuccin-mocha so it matches the
-  # Catppuccin-Lavender Noctalia preset (manual bridge — neovim is not in
-  # Noctalia's native template list).
+  # they come up. Colorscheme is catppuccin-mocha.
   programs.neovim = {
     enable = true;
     defaultEditor = true;

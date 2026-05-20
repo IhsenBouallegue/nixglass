@@ -95,12 +95,6 @@
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "us";
 
-  # Niri scrolling tiling compositor (the niri-flake nixosModule is wired in flake.nix).
-  # Pin to niri-unstable so we get ext-background-effect support (blur via
-  # the Wayland staging protocol). niri-stable v25.08 predates that.
-  programs.niri.enable = true;
-  programs.niri.package = inputs.niri.packages.${pkgs.system}.niri-unstable;
-
   # AMD GPU stack. Harmless on the VM (virtio-vga-gl ignores it), required
   # on bare metal for Vulkan + 32-bit Steam.
   boot.initrd.kernelModules = ["amdgpu"];
@@ -110,22 +104,29 @@
     extraPackages = with pkgs; [vulkan-tools libva-utils];
   };
 
-  # Wayland glue.
+  # Wayland glue. Portal backends for the wlroots-family compositor (mango):
+  #   - gtk: file chooser, settings, app chooser (fallback for everything)
+  #   - wlr: screenshot, screencast (wlroots-specific protocols)
+  # The gnome backend used to be listed here (back when niri was the daily
+  # driver), but with no gnome-session running, xdg-desktop-portal blocks for
+  # ~50s on every GTK4 app launch trying to start its D-Bus name. That's the
+  # "Ghostty takes a minute to open" symptom — see journalctl --user -u
+  # xdg-desktop-portal for the "StartServiceByName ... gnome: Timeout" errors.
   xdg.portal = {
     enable = true;
     extraPortals = with pkgs; [
       xdg-desktop-portal-gtk
-      xdg-desktop-portal-gnome
+      xdg-desktop-portal-wlr
     ];
-    config.niri.default = ["gnome" "gtk"];
+    config.common = {
+      default = ["gtk"];
+      "org.freedesktop.impl.portal.Screenshot" = ["wlr"];
+      "org.freedesktop.impl.portal.ScreenCast" = ["wlr"];
+    };
   };
   security.polkit.enable = true;
   programs.dconf.enable = true;
   services.gvfs.enable = true;
-
-  # PAM entry for Noctalia's lock screen — without this, the lock UI can't
-  # authenticate and you get stuck on it. See CLAUDE.md.
-  security.pam.services.noctalia-lock = {};
 
   # Gaming stack (target stack in CLAUDE.md). gamemode enables CPU governor
   # tweaks for foreground games; no extra group membership needed in 1.6+.
@@ -140,26 +141,26 @@
   programs.gamemode.enable = true;
   programs.gamescope.enable = true;
 
-  # Autologin to niri via greetd. No greeter UI — initial_session fires automatically.
-  # Bare metal and VM both autologin; throwaway by design for a single-user workstation.
+  # Autologin to mango via greetd. No greeter UI — initial_session fires
+  # automatically. Single-user workstation by design.
   services.greetd = {
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.niri}/bin/niri-session";
+        command = "${pkgs.mangowc}/bin/mango";
         user = "ihsen";
       };
     };
   };
 
-  # Sound — niri itself doesn't pull this in. Pipewire is the standard pick.
+  # Sound — pipewire is the standard pick.
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     pulse.enable = true;
   };
 
-  # Services Noctalia talks to for status bar widgets (network, battery,
+  # Services DMS talks to for status bar widgets (network, battery,
   # power profile, bluetooth). The VM has no real hardware for most of these
   # but enabling them is harmless and matches the bare-metal target.
   networking.networkmanager.enable = true;
@@ -220,7 +221,7 @@
 
   # System-wide fonts. Ghostty's font-family reads from fontconfig, which only
   # sees fonts in fonts.packages or the user's HM font scope. System-wide is
-  # simplest and ensures other apps (zen, noctalia later) see the same set.
+  # simplest and ensures other apps (zen, dms) see the same set.
   fonts.packages = with pkgs; [
     jetbrains-mono
     nerd-fonts.caskaydia-cove
@@ -235,6 +236,9 @@
     papirus-icon-theme
     nix-output-monitor
     nvd
+    # mango (dwl-fork wlroots compositor) — the autologin session. Pulled
+    # from nixpkgs-unstable via the `modifications` overlay.
+    mangowc
   ];
 
   # Crisp font rendering on the G9 (110 DPI, RGB subpixel order). "slight"
@@ -261,7 +265,7 @@
       cores = 4;
       diskSize = 8192;
       qemu.options = [
-        # virgl 3D acceleration so niri (a wayland compositor) actually renders.
+        # virgl 3D acceleration so mango (a wlroots compositor) actually renders.
         "-device virtio-vga-gl"
         # GTK display gives a proper window with a Machine/View menubar
         # (Machine -> Power Down, etc.) — much better UX than SDL.
