@@ -62,6 +62,7 @@
     # brightness, media keys, clipboard).
     grim
     slurp
+    swappy # screenshot annotation editor (also dms's default editor)
     wl-clipboard
     brightnessctl
     playerctl

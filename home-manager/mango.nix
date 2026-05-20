@@ -34,13 +34,26 @@ in {
   home.file.".config/mango/config.conf".text = ''
     # More option see https://github.com/DreamMaoMao/mango/wiki/
 
-    # Window effect — blur on windows only. blur_layer stays 0 to avoid
-    # blurring layer-shell surfaces (DMS bar/launcher), which would paint
-    # a blurred strip behind them. See
-    # https://mangowm.github.io/docs/visuals/effects.
+    # Window effect — blur on both windows AND layer-shell surfaces. DMS's
+    # quickshell-based bar/launcher/modals draw transparent pixels only
+    # where the visible widget is (unlike Noctalia, whose bar surface
+    # extended past the widget and produced a blurred strip behind it).
+    # To make blur visible inside DMS surfaces, toggle Settings →
+    # Personalization → Theme & Colors → Background Blur in the DMS GUI
+    # and lower the widget opacity. Surgical exclusion if needed:
+    #   layerrule=noblur:1,layer_name:dms:<namespace>
+    # See https://mangowm.github.io/docs/visuals/effects/ and
+    # https://danklinux.com/docs/dankmaterialshell/layers.
     blur=1
-    blur_layer=0
-    blur_optimized=1
+    blur_layer=1
+    # blur_optimized=0 (was 1): scenefx's "optimized" blur path
+    # pre-renders into a cached buffer (typically just the wallpaper) and
+    # reuses it for every blurred surface — so notifications/popups blur
+    # the wallpaper but ignore the windows underneath. Disabling forces
+    # mango to compute blur from the live composited backdrop each frame,
+    # which captures actual window contents. Higher GPU cost; fine on
+    # this AMD stack.
+    blur_optimized=0
     blur_params_num_passes = 2
     blur_params_radius = 5
     blur_params_noise = 0.02
@@ -185,28 +198,35 @@ in {
     # Without this, those prompts silently fail to appear.
     exec-once=${pkgs.lxqt.lxqt-policykit}/bin/lxqt-policykit-agent
 
-    # Key Bindings
+    # Key Bindings — Hyprland-style: SUPER is the only modifier.
+    #   SUPER          = spawn / focus / view
+    #   SUPER+SHIFT    = move / swap
+    #   SUPER+CTRL     = workspace prev/next
+    # Ctrl and Alt are left alone so editors and the terminal get their
+    # word-jump / app shortcuts back.
+
+    # reload
     bind=SUPER,r,reload_config
 
-    # menu and terminal — overridden from upstream's foot/rofi (neither
-    # installed on this system). Ghostty is the daily-driver terminal;
-    # DMS's spotlight IPC takes the rofi slot.
-    #
-    # Use the HM-configured ghostty package (upstream flake HEAD) so we
-    # don't launch two different ghostty builds that contend on D-Bus.
-    bind=Alt,Return,spawn,${lib.getExe ghosttyPkg}
-    bind=Alt,space,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call spotlight toggle
+    # spawn — Ghostty (HM-configured upstream build, see comment at top of
+    # file) and DMS spotlight take the terminal/launcher slots.
+    bind=SUPER,Return,spawn,${lib.getExe ghosttyPkg}
+    bind=SUPER,space,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call spotlight toggle
+
+    # screenshot — `dms screenshot` is compositor-agnostic, interactive
+    # region select, saves to file + clipboard.
+    bind=SUPER+SHIFT,s,spawn,${config.programs.dank-material-shell.package}/bin/dms screenshot
 
     # exit
     bind=SUPER,m,quit
-    bind=ALT,q,killclient,
+    bind=SUPER,q,killclient,
 
-    # switch window focus
+    # focus
     bind=SUPER,Tab,focusstack,next
-    bind=ALT,Left,focusdir,left
-    bind=ALT,Right,focusdir,right
-    bind=ALT,Up,focusdir,up
-    bind=ALT,Down,focusdir,down
+    bind=SUPER,Left,focusdir,left
+    bind=SUPER,Right,focusdir,right
+    bind=SUPER,Up,focusdir,up
+    bind=SUPER,Down,focusdir,down
 
     # swap window
     bind=SUPER+SHIFT,Up,exchange_client,up
@@ -214,82 +234,62 @@ in {
     bind=SUPER+SHIFT,Left,exchange_client,left
     bind=SUPER+SHIFT,Right,exchange_client,right
 
-    # switch window status
+    # window state
     bind=SUPER,g,toggleglobal,
-    bind=ALT,Tab,toggleoverview,
-    bind=ALT,backslash,togglefloating,
-    bind=ALT,a,togglemaximizescreen,
-    bind=ALT,f,togglefullscreen,
-    bind=ALT+SHIFT,f,togglefakefullscreen,
+    bind=SUPER+SHIFT,Tab,toggleoverview,
+    bind=SUPER,v,togglefloating,
+    bind=SUPER,a,togglemaximizescreen,
+    bind=SUPER,f,togglefullscreen,
+    bind=SUPER+SHIFT,f,togglefakefullscreen,
     bind=SUPER,i,minimized,
     bind=SUPER,o,toggleoverlay,
     bind=SUPER+SHIFT,I,restore_minimized
-    bind=ALT,z,toggle_scratchpad
+    bind=SUPER,z,toggle_scratchpad
 
     # scroller layout
-    bind=ALT,e,set_proportion,1.0
-    bind=ALT,x,switch_proportion_preset,
+    bind=SUPER,e,set_proportion,1.0
+    bind=SUPER+SHIFT,e,switch_proportion_preset,
 
     # switch layout
     bind=SUPER,n,switch_layout
 
-    # tag switch
-    bind=SUPER,Left,viewtoleft,0
-    bind=CTRL,Left,viewtoleft_have_client,0
-    bind=SUPER,Right,viewtoright,0
-    bind=CTRL,Right,viewtoright_have_client,0
-    bind=CTRL+SUPER,Left,tagtoleft,0
-    bind=CTRL+SUPER,Right,tagtoright,0
+    # workspace switch — SUPER+N views, SUPER+SHIFT+N moves window.
+    bind=SUPER,1,view,1,0
+    bind=SUPER,2,view,2,0
+    bind=SUPER,3,view,3,0
+    bind=SUPER,4,view,4,0
+    bind=SUPER,5,view,5,0
+    bind=SUPER,6,view,6,0
+    bind=SUPER,7,view,7,0
+    bind=SUPER,8,view,8,0
+    bind=SUPER,9,view,9,0
 
-    bind=Ctrl,1,view,1,0
-    bind=Ctrl,2,view,2,0
-    bind=Ctrl,3,view,3,0
-    bind=Ctrl,4,view,4,0
-    bind=Ctrl,5,view,5,0
-    bind=Ctrl,6,view,6,0
-    bind=Ctrl,7,view,7,0
-    bind=Ctrl,8,view,8,0
-    bind=Ctrl,9,view,9,0
+    bind=SUPER+SHIFT,1,tag,1,0
+    bind=SUPER+SHIFT,2,tag,2,0
+    bind=SUPER+SHIFT,3,tag,3,0
+    bind=SUPER+SHIFT,4,tag,4,0
+    bind=SUPER+SHIFT,5,tag,5,0
+    bind=SUPER+SHIFT,6,tag,6,0
+    bind=SUPER+SHIFT,7,tag,7,0
+    bind=SUPER+SHIFT,8,tag,8,0
+    bind=SUPER+SHIFT,9,tag,9,0
 
-    bind=Alt,1,tag,1,0
-    bind=Alt,2,tag,2,0
-    bind=Alt,3,tag,3,0
-    bind=Alt,4,tag,4,0
-    bind=Alt,5,tag,5,0
-    bind=Alt,6,tag,6,0
-    bind=Alt,7,tag,7,0
-    bind=Alt,8,tag,8,0
-    bind=Alt,9,tag,9,0
-
-    # monitor switch
-    bind=alt+shift,Left,focusmon,left
-    bind=alt+shift,Right,focusmon,right
-    bind=SUPER+Alt,Left,tagmon,left
-    bind=SUPER+Alt,Right,tagmon,right
+    # workspace prev/next
+    bind=SUPER+CTRL,Left,viewtoleft,0
+    bind=SUPER+CTRL,Right,viewtoright,0
 
     # gaps
-    bind=ALT+SHIFT,X,incgaps,1
-    bind=ALT+SHIFT,Z,incgaps,-1
-    bind=ALT+SHIFT,R,togglegaps
+    bind=SUPER+SHIFT,X,incgaps,1
+    bind=SUPER+SHIFT,Z,incgaps,-1
+    bind=SUPER+SHIFT,R,togglegaps
 
-    # movewin
-    bind=CTRL+SHIFT,Up,movewin,+0,-50
-    bind=CTRL+SHIFT,Down,movewin,+0,+50
-    bind=CTRL+SHIFT,Left,movewin,-50,+0
-    bind=CTRL+SHIFT,Right,movewin,+50,+0
-
-    # resizewin
-    bind=CTRL+ALT,Up,resizewin,+0,-50
-    bind=CTRL+ALT,Down,resizewin,+0,+50
-    bind=CTRL+ALT,Left,resizewin,-50,+0
-    bind=CTRL+ALT,Right,resizewin,+50,+0
-
-    # Mouse Button Bindings
+    # Mouse Button Bindings — SUPER+drag handles move/resize, replacing the
+    # old keyboard-driven CTRL+SHIFT/CTRL+ALT arrow movewin/resizewin binds.
     mousebind=SUPER,btn_left,moveresize,curmove
     mousebind=NONE,btn_middle,togglemaximizescreen,0
     mousebind=SUPER,btn_right,moveresize,curresize
 
-    # Axis Bindings
+    # Axis Bindings — SUPER+scroll walks workspaces (skipping empty ones).
     axisbind=SUPER,UP,viewtoleft_have_client
     axisbind=SUPER,DOWN,viewtoright_have_client
   '';
