@@ -1,4 +1,8 @@
-{inputs, ...}: {
+{
+  config,
+  inputs,
+  ...
+}: {
   imports = [inputs.zen-browser.homeModules.twilight];
 
   programs.zen-browser = {
@@ -20,4 +24,13 @@
       };
     };
   };
+
+  # Symlink Zen's userChrome.css to DMS's matugen-generated zen.css so the
+  # browser chrome tracks the active DMS theme. mkOutOfStoreSymlink keeps
+  # the link target stable as ~/.config/DankMaterialShell/zen.css (a plain
+  # file DMS rewrites in place on theme/wallpaper changes); Zen reads
+  # userChrome.css on launch, so new Zen windows pick up the new palette.
+  # Restart Zen after a DMS theme switch.
+  home.file.".config/zen/default/chrome/userChrome.css".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/DankMaterialShell/zen.css";
 }

@@ -7,7 +7,7 @@
     enable = true;
     # Upstream ghostty flake — newer than the nixpkgs-25.11 1.3.1 pin. Drop
     # the override (use `pkgs.ghostty`) once nixpkgs catches up.
-    package = inputs.ghostty.packages.${pkgs.system}.default;
+    package = inputs.ghostty.packages.${pkgs.stdenv.hostPlatform.system}.default;
     settings = {
       # Font
       font-family = "JetBrainsMono Nerd Font";
@@ -45,30 +45,12 @@
       shell-integration = "detect";
       shell-integration-features = "no-cursor,ssh-env";
 
-      # Matte-candy (Ayaka) palette.
-      background = "060c10";
-      foreground = "e6e6e6";
-      cursor-color = "ffcc66";
-      selection-foreground = "ffffff";
-      selection-background = "404040";
-      palette = [
-        "0=#262626"
-        "1=#e65c5c"
-        "2=#66cc66"
-        "3=#ffcc66"
-        "4=#6699ff"
-        "5=#cc66cc"
-        "6=#66cccc"
-        "7=#f2f2f2"
-        "8=#404040"
-        "9=#ff6666"
-        "10=#80e680"
-        "11=#ffdd80"
-        "12=#80b3ff"
-        "13=#e680e6"
-        "14=#80e6e6"
-        "15=#ffffff"
-      ];
+      # Palette tracks the active DMS theme. DMS's matugen pipeline writes
+      # ~/.config/ghostty/themes/dankcolors on every theme/wallpaper change;
+      # ghostty's `theme = <name>` directive loads themes/<name> from the
+      # config dir on launch. New ghostty windows pick up the current
+      # palette automatically; existing windows need a relaunch.
+      theme = "dankcolors";
 
       # Splits + tabs + clipboard, ported from the omarchy ghostty config.
       keybind = [
