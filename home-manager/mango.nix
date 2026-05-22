@@ -70,10 +70,10 @@ in {
     shadows_position_y = 0
     shadowscolor= 0x000000ff
 
-    border_radius=4
+    border_radius=6
     no_radius_when_single=0
     focused_opacity=1.0
-    unfocused_opacity=1.0
+    unfocused_opacity=0.85
 
     # Animation Configuration(support type:zoom,slide)
     animations=1
@@ -163,11 +163,11 @@ in {
     #   urgentcolor  = attention yellow
     gappih=5
     gappiv=5
-    gappoh=10
-    gappov=10
+    gappoh=0
+    gappov=0
     scratchpad_width_ratio=0.8
     scratchpad_height_ratio=0.9
-    borderpx=4
+    borderpx=1
     rootcolor=0x201b14ff
     bordercolor=0x404040ff
     focuscolor=0xe65c5cff
@@ -195,16 +195,14 @@ in {
 
     dwindle_split_ratio=0.33
 
-    # DankMaterialShell integration — DMS writes monitor/output rules,
-    # palette, and gaps/radius to these files when its settings panel
-    # changes. Mango's parser supports `source=` (require) and
-    # `source-optional=` (skip if missing); use the optional form because
-    # DMS creates each file lazily on first change. Without these
-    # includes, DMS shows "Outputs Include Missing" in its display settings.
-    # https://danklinux.com/docs/dankmaterialshell/compositors
-    source-optional=~/.config/mango/dms/outputs.conf
-    source-optional=~/.config/mango/dms/colors.conf
-    source-optional=~/.config/mango/dms/layout.conf
+    # Monitor — the Samsung Odyssey G9 ultrawide. Inlined rather than
+    # sourced from DMS's auto-generated ~/.config/mango/dms/outputs.conf
+    # because DMS used to also overwrite border_radius/gaps/colors in
+    # sibling files, silently winning over everything set here. Single
+    # source of truth = this file. DMS's display panel still shows the
+    # output but its changes (resolution, scale, VRR) no longer
+    # propagate to mango — edit this monitorrule directly when needed.
+    monitorrule=name:DP-2,width:5120,height:1440,refresh:240,x:0,y:0,scale:1.25,rr:0,vrr:0
 
     # Autostart — runs once via spawn_shell (sh -c) when mango starts.
     # DankMaterialShell provides bar, launcher (spotlight), control center,
@@ -310,10 +308,15 @@ in {
     bind=SUPER+CTRL,Right,viewtoright,0
 
     # project workspace — fuzzel picker over ~/Documents/repos/*/.workspace
-    # markers; selecting one spawns browser+editor+terminal on the current
-    # tag in tile layout with the project as working dir. See
-    # home-manager/workspaces.nix.
-    bind=SUPER+CTRL,p,spawn,mango-project-picker
+    # markers; selecting one spawns Zen + ghostty/zellij on the current
+    # tag with the project as working dir. See home-manager/workspaces.nix.
+    bind=SUPER+SHIFT,p,spawn,mango-project-picker
+
+    # browser — Zen Twilight in a fresh window (--new-window avoids
+    # focus_on_activate=1 raising an existing window on another tag).
+    # mango parses spawn args space-separated after the third comma; an
+    # extra comma would land --new-window as a separate dispatch arg.
+    bind=SUPER,b,spawn,zen-twilight --new-window
 
     # gaps
     bind=SUPER+SHIFT,X,incgaps,1
