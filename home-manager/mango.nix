@@ -228,6 +228,7 @@ in {
     # file) and DMS spotlight take the terminal/launcher slots.
     bind=SUPER,Return,spawn,${lib.getExe ghosttyPkg}
     bind=SUPER,space,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call spotlight toggle
+    bind=SUPER,s,spawn,${lib.getExe pkgs.nautilus}
 
     # screenshot — `dms screenshot` is compositor-agnostic, interactive
     # region select, saves to file + clipboard.

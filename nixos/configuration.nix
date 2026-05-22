@@ -248,7 +248,10 @@
     # from nixpkgs-unstable via the `modifications` overlay.
     mangowc
     mise
+    nautilus
   ];
+
+  xdg.mime.defaultApplications."inode/directory" = "org.gnome.Nautilus.desktop";
 
   # nix-ld provides a fake dynamic linker at /lib64/ld-linux-x86-64.so.2 so
   # generic Linux binaries (mise-managed runtimes, prebuilt LSPs, etc.) run.
