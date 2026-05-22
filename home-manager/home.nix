@@ -189,6 +189,36 @@
     '';
   };
 
+  # Minimal one-line prompt: directory + git branch/status + arrow.
+  # Bash integration auto-attaches via HM (sources init at end of ~/.bashrc).
+  programs.starship = {
+    enable = true;
+    settings = {
+      add_newline = false;
+      format = "$directory$git_branch$git_status$character";
+      # Coral on success and error — both pop with the primary accent.
+      # Directory uses cosmic blue (secondary). Branch/status are gray
+      # so the prompt resolves to "two colours + neutral text".
+      character = {
+        success_symbol = "[❯](bold red)";
+        error_symbol = "[❯](bold red)";
+      };
+      directory = {
+        style = "bold blue";
+        truncation_length = 3;
+        truncate_to_repo = false;
+      };
+      git_branch = {
+        symbol = " ";
+        style = "bold white";
+        format = "[$symbol$branch]($style) ";
+      };
+      git_status = {
+        style = "bold white";
+      };
+    };
+  };
+
   # Per-project nix shells: drop an `.envrc` with `use flake` and the shell
   # is loaded automatically when you `cd` in. nix-direnv adds caching so the
   # eval isn't re-run on every cd.

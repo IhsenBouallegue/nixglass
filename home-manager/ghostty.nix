@@ -2,7 +2,9 @@
   inputs,
   pkgs,
   ...
-}: {
+}: let
+  palette = import ./themes/matte-candy.nix;
+in {
   programs.ghostty = {
     enable = true;
     # Upstream ghostty flake — newer than the nixpkgs-25.11 1.3.1 pin. Drop
@@ -45,12 +47,12 @@
       shell-integration = "detect";
       shell-integration-features = "no-cursor,ssh-env";
 
-      # Palette tracks the active DMS theme. DMS's matugen pipeline writes
-      # ~/.config/ghostty/themes/dankcolors on every theme/wallpaper change;
-      # ghostty's `theme = <name>` directive loads themes/<name> from the
-      # config dir on launch. New ghostty windows pick up the current
-      # palette automatically; existing windows need a relaunch.
-      theme = "dankcolors";
+      # Canonical Matte Candy palette, written declaratively from
+      # ./themes/matte-candy.nix via xdg.configFile below. DMS's matugen
+      # pipeline still regenerates ~/.config/ghostty/themes/dankcolors on
+      # wallpaper change — we just don't reference it. To re-couple to
+      # DMS, switch this back to "dankcolors".
+      theme = "matte-candy";
 
       # Splits + tabs + clipboard, ported from the omarchy ghostty config.
       keybind = [
@@ -77,4 +79,31 @@
       ];
     };
   };
+
+  # Ghostty theme file format: one `key = value` per line, plus
+  # `palette = N=#hex` entries for the 16 ANSI slots.
+  xdg.configFile."ghostty/themes/matte-candy".text = ''
+    background = ${palette.bg}
+    foreground = ${palette.fg}
+    cursor-color = ${palette.cursor}
+    selection-background = ${palette.selectionBg}
+    selection-foreground = ${palette.selectionFg}
+
+    palette = 0=${palette.color0}
+    palette = 1=${palette.color1}
+    palette = 2=${palette.color2}
+    palette = 3=${palette.color3}
+    palette = 4=${palette.color4}
+    palette = 5=${palette.color5}
+    palette = 6=${palette.color6}
+    palette = 7=${palette.color7}
+    palette = 8=${palette.color8}
+    palette = 9=${palette.color9}
+    palette = 10=${palette.color10}
+    palette = 11=${palette.color11}
+    palette = 12=${palette.color12}
+    palette = 13=${palette.color13}
+    palette = 14=${palette.color14}
+    palette = 15=${palette.color15}
+  '';
 }
