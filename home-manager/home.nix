@@ -131,12 +131,27 @@
   # with mango/ghostty/DMS.
   gtk = let
     p = import ./themes/matte-candy.nix;
+    # GTK3 (zenity, gtk3 file pickers) reads @theme_selected_bg_color /
+    # @theme_selected_fg_color for selection + focus rings. GTK4 /
+    # libadwaita reads @accent_bg_color / @accent_color. Override both
+    # so the accent lands consistently regardless of toolkit version.
     accentCss = ''
       @define-color accent_bg_color ${p.accent};
       @define-color accent_color ${p.accent};
       @define-color accent_fg_color #ffffff;
-      window, .background { background-color: ${p.bg}; color: ${p.fg}; }
-      button:focus, entry:focus, *:focus {
+      @define-color theme_selected_bg_color ${p.accent};
+      @define-color theme_selected_fg_color #ffffff;
+      @define-color theme_unfocused_selected_bg_color ${p.accent};
+      @define-color theme_unfocused_selected_fg_color #ffffff;
+      @define-color focus_border_color ${p.accent};
+      @define-color borders ${p.color8};
+      @define-color unfocused_borders ${p.color8};
+      entry:focus:focus, entry:focus-within:focus-within {
+        border-color: ${p.accent};
+        box-shadow: inset 0 0 0 2px ${p.accent};
+        outline-color: ${p.accent};
+      }
+      button:focus:focus, button:focus-visible:focus-visible {
         outline-color: ${p.accent};
         border-color: ${p.accent};
       }
