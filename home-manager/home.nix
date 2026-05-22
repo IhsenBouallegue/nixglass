@@ -12,6 +12,7 @@
     ./ghostty.nix
     ./dms.nix
     ./zen.nix
+    ./vscode.nix
     ./nvim.nix
     ./zellij.nix
   ];
@@ -81,6 +82,7 @@
     code-cursor
     bambu-studio
     spotify
+    chromium
 
     # Gaming user-side. Steam itself is enabled at the system level.
     # lutris/zellij come from unstable via the inherit overlay in

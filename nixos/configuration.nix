@@ -230,6 +230,14 @@
     noto-fonts-color-emoji
   ];
 
+  # Tell Electron apps (VS Code, Discord, Bitwarden, Cursor) to run on
+  # Wayland natively instead of through XWayland — nixpkgs's electron
+  # wrapper reads this and passes --ozone-platform=wayland +
+  # --enable-features=WaylandWindowDecorations,UseOzonePlatform. Without
+  # this, fonts render slightly fuzzy on wlroots compositors (XWayland
+  # bitmap-scales rather than letting the toolkit do crisp HiDPI/text).
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+
   # System-wide packages: icon theme for GTK/Qt apps, plus nh's helpers
   # (nom = streaming build output, nvd = generation diff).
   environment.systemPackages = with pkgs; [
