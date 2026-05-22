@@ -247,7 +247,12 @@
     # mango (dwl-fork wlroots compositor) — the autologin session. Pulled
     # from nixpkgs-unstable via the `modifications` overlay.
     mangowc
+    mise
   ];
+
+  # nix-ld provides a fake dynamic linker at /lib64/ld-linux-x86-64.so.2 so
+  # generic Linux binaries (mise-managed runtimes, prebuilt LSPs, etc.) run.
+  programs.nix-ld.enable = true;
 
   # Crisp font rendering on the G9 (110 DPI, RGB subpixel order). "slight"
   # hinting preserves shape without the chunky blockiness of "full"; RGB

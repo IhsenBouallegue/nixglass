@@ -44,6 +44,25 @@
           -- blur) show through floats and the completion popup.
           vim.o.winblend = 10
           vim.o.pumblend = 10
+          -- Transparent background: clear the bg of Normal-family groups
+          -- after any colorscheme loads so ghostty's background shows
+          -- through buffers, floats, gutters, and the snacks dashboard.
+          vim.api.nvim_create_autocmd("ColorScheme", {
+            callback = function()
+              for _, group in ipairs({
+                "Normal", "NormalNC", "NormalFloat", "FloatBorder",
+                "SignColumn", "EndOfBuffer", "MsgArea", "VertSplit",
+                "WinSeparator", "StatusLine", "StatusLineNC",
+                "TabLine", "TabLineFill",
+                "SnacksDashboardNormal", "SnacksDashboardDesc",
+                "SnacksDashboardFooter", "SnacksDashboardHeader",
+                "SnacksDashboardIcon", "SnacksDashboardKey",
+                "SnacksDashboardTitle", "SnacksDashboardFile",
+              }) do
+                vim.api.nvim_set_hl(0, group, { bg = "none" })
+              end
+            end,
+          })
         end,
       },
       -- DMS also writes ~/.config/nvim/lua/lualine/themes/dms.lua via

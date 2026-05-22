@@ -21,8 +21,8 @@
       font-thicken-strength = 50;
 
       # Window
-      window-padding-x = 14;
-      window-padding-y = 14;
+      window-padding-x = 6;
+      window-padding-y = 6;
       window-padding-balance = true;
       window-decoration = false;
       confirm-close-surface = false;

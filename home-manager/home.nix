@@ -15,6 +15,7 @@
     ./vscode.nix
     ./nvim.nix
     ./zellij.nix
+    ./workspaces.nix
   ];
 
   nixpkgs = {
@@ -58,6 +59,9 @@
     fd
     zenity
     gh
+
+    gcc
+    gnumake
 
     # Wayland helpers used by mango keybinds and DMS (screenshot, audio,
     # brightness, media keys, clipboard).
@@ -113,6 +117,25 @@
     x11.enable = true;
   };
 
+  # Icon theme — Adwaita (the freedesktop default) is missing entries for
+  # Zen, Foot, Bitwarden, Neovim, NixOS-Manual, etc., so DMS's spotlight
+  # falls back to colored letter badges. Papirus-Dark covers the long
+  # tail. `gtk.iconTheme` writes gsettings + gtk-3.0/settings.ini for GTK
+  # apps; the GTK_ICON_THEME / QT_ICON_THEME env vars cover Qt apps
+  # (including DMS's quickshell-based spotlight).
+  gtk = {
+    enable = true;
+    iconTheme = {
+      name = "Papirus-Dark";
+      package = pkgs.papirus-icon-theme;
+    };
+  };
+
+  home.sessionVariables = {
+    GTK_ICON_THEME = "Papirus-Dark";
+    QT_ICON_THEME = "Papirus-Dark";
+  };
+
   # Declarative URL/mime defaults — Zen's setAsDefaultBrowser sets these at
   # runtime, but pinning them here means a fresh machine has them on first boot
   # too. The desktop file name follows the zen-browser-flake variant (twilight).
@@ -161,6 +184,9 @@
     shellAliases = {
       cx = "claude --dangerously-skip-permissions";
     };
+    initExtra = ''
+      eval "$(${pkgs.mise}/bin/mise activate bash)"
+    '';
   };
 
   # Per-project nix shells: drop an `.envrc` with `use flake` and the shell
