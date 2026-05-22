@@ -129,5 +129,5 @@
     '';
   };
 in {
-  home.packages = [mango-project mango-project-picker pkgs.fuzzel];
+  home.packages = [mango-project mango-project-picker];
 }

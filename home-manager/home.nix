@@ -16,6 +16,7 @@
     ./nvim.nix
     ./zellij.nix
     ./workspaces.nix
+    ./fuzzel.nix
   ];
 
   nixpkgs = {
@@ -123,12 +124,35 @@
   # tail. `gtk.iconTheme` writes gsettings + gtk-3.0/settings.ini for GTK
   # apps; the GTK_ICON_THEME / QT_ICON_THEME env vars cover Qt apps
   # (including DMS's quickshell-based spotlight).
-  gtk = {
+  # GTK theme. adw-gtk3 ports libadwaita's look back to GTK3 so zenity,
+  # nautilus, file-pickers etc. match the dark surface. Accent overrides
+  # below recolour focus rings / buttons / progress bars to the matte-candy
+  # coral so the askpass dialog and any GTK file pickers brand consistently
+  # with mango/ghostty/DMS.
+  gtk = let
+    p = import ./themes/matte-candy.nix;
+    accentCss = ''
+      @define-color accent_bg_color ${p.accent};
+      @define-color accent_color ${p.accent};
+      @define-color accent_fg_color #ffffff;
+      window, .background { background-color: ${p.bg}; color: ${p.fg}; }
+      button:focus, entry:focus, *:focus {
+        outline-color: ${p.accent};
+        border-color: ${p.accent};
+      }
+    '';
+  in {
     enable = true;
+    theme = {
+      name = "adw-gtk3-dark";
+      package = pkgs.adw-gtk3;
+    };
     iconTheme = {
       name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
     };
+    gtk3.extraCss = accentCss;
+    gtk4.extraCss = accentCss;
   };
 
   home.sessionVariables = {
