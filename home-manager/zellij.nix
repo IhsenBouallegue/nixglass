@@ -22,6 +22,12 @@ in {
       mouse_mode = true;
       show_startup_tips = false;
       ui.pane_frames.rounded_corners = true;
+      # Ghostty answers zellij's CSI-u/OSC startup queries with sequences
+      # zellij 0.44 can't parse, hits the 1000-unknown-message cutoff, and
+      # logs the client out (window closes immediately when launched via
+      # `exec zellij` from ghostty). Disabling kitty-keyboard support stops
+      # zellij from soliciting those responses.
+      support_kitty_keyboard_protocol = false;
       # Canonical Matte Candy palette, written declaratively from
       # ./themes/matte-candy.nix via xdg.configFile below. To re-couple
       # to DMS's matugen pipeline (which still regenerates dms.kdl on
