@@ -5,30 +5,30 @@
   ...
 }: let
   # Matte-Candy palette mapped into DMS's Material Design 3 schema. Source
-  # palette lives inline in ghostty.nix / mango.nix (ported from
-  # omarchy-customizer's theme/matte-candy/colors.toml); this file is the
-  # DMS-shaped projection of those same hex values.
+  # palette is themes/matte-candy.nix (also imported by ghostty/zellij/nvim/
+  # mango); this file is the DMS-shaped projection.
+  p = import ./themes/matte-candy.nix;
   matteCandyTheme = pkgs.writeText "matte-candy.json" (builtins.toJSON {
     dark = {
       name = "Matte-Candy";
-      primary = "#e65c5c";
+      primary = p.accent;
       primaryText = "#ffffff";
       primaryContainer = "#5a2020";
-      secondary = "#cc66cc";
-      surface = "#060c10";
-      surfaceText = "#e6e6e6";
-      surfaceVariant = "#101820";
+      secondary = p.color4;
+      surface = p.bg;
+      surfaceText = p.fg;
+      surfaceVariant = p.color0;
       surfaceVariantText = "#a8a8b8";
-      surfaceTint = "#e65c5c";
-      background = "#060c10";
-      backgroundText = "#e6e6e6";
-      outline = "#404040";
-      surfaceContainer = "#101820";
+      surfaceTint = p.accent;
+      background = p.bg;
+      backgroundText = p.fg;
+      outline = p.color8;
+      surfaceContainer = p.color0;
       surfaceContainerHigh = "#1a2530";
       surfaceContainerHighest = "#243040";
-      error = "#ff6666";
+      error = p.color9;
       warning = "#ffcc66";
-      info = "#6699ff";
+      info = p.color4;
       matugen_type = "scheme-content";
     };
     light = {

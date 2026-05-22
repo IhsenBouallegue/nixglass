@@ -6,8 +6,9 @@
 # enough hue for subtle differentiation, neutral enough that only the
 # two accents draw the eye.
 #
-# Imported by ghostty.nix, zellij.nix, and nvim.nix; rebuild after editing
-# any hex value here and every consumer updates atomically.
+# Imported by ghostty.nix, zellij.nix, nvim.nix, mango.nix, and dms.nix;
+# rebuild after editing any hex value here and every consumer updates
+# atomically.
 #
 # Note: zellij.nix and nvim.nix don't blindly map palette slot N to
 # the ANSI Nth-named colour. zellij's "green" slot (the focused-pane
@@ -15,8 +16,9 @@
 # semantic groups route Statement/Conditional/exceptions to coral and
 # Function/Keyword to blue. Edit those files to reroute, not this one.
 #
-# DMS keeps its own matugen-driven palette for the bar/launcher/dashboard
-# (driven by wallpaper) — this file deliberately does not touch that.
+# DMS also gets a matte-candy theme JSON projected from these values
+# (see dms.nix), but it ships alongside DMS's own matugen-driven themes;
+# user picks via DMS GUI which one is active.
 {
   # Surface
   bg = "#060c10"; # cosmic blue-black (ghostty bg)

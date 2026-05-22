@@ -10,6 +10,9 @@
   # `pkgs.ghostty` (1.3.1) launches with --gtk-single-instance=false, and the
   # two app-id paths fight on every spawn.
   ghosttyPkg = config.programs.ghostty.package;
+  palette = import ./themes/matte-candy.nix;
+  # mango wants 0xRRGGBBaa; palette is #RRGGBB. Strip hash, append alpha.
+  mangoHex = hex: alpha: "0x" + (lib.removePrefix "#" hex) + alpha;
 in {
   # mango (dwl-fork wlroots compositor) — the daily-driver compositor,
   # launched by greetd autologin (see nixos/configuration.nix).
@@ -156,11 +159,11 @@ in {
     # mouse
     mouse_natural_scrolling=0
 
-    # Appearance — gaps/borders/radius mirror upstream defaults; only the
-    # matte-candy palette is applied:
-    #   focuscolor   = accent red    (#e65c5c)
-    #   bordercolor  = inactive gray (#404040)
-    #   urgentcolor  = attention yellow
+    # Appearance. Gaps/borders/radius mirror upstream defaults; accent
+    # colors are routed from themes/matte-candy.nix. The mango-only status
+    # slots (urgent/scratchpad/global/overlay/maximize) are left as upstream
+    # defaults since they signal distinct UI states that the 2-accent palette
+    # would collapse together.
     gappih=5
     gappiv=5
     gappoh=0
@@ -168,9 +171,9 @@ in {
     scratchpad_width_ratio=0.8
     scratchpad_height_ratio=0.9
     borderpx=1
-    rootcolor=0x201b14ff
-    bordercolor=0x404040ff
-    focuscolor=0xe65c5cff
+    rootcolor=${mangoHex palette.bg "ff"}
+    bordercolor=${mangoHex palette.color8 "ff"}
+    focuscolor=${mangoHex palette.accent "ff"}
     maximizescreencolor=0x89aa61ff
     urgentcolor=0xffcc66ff
     scratchpadcolor=0x516c93ff
