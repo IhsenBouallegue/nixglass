@@ -109,6 +109,8 @@ in {
       --nebula-ui-tint: rgb(0 0 0 / 40%) !important;
       --nebula-website-tint: rgb(0 0 0 / 40%) !important;
     }
+
+    .titlebar-close { display: none !important; }
   '';
   home.file.".config/zen/default/chrome/userContent.css".text = ''
     @import url("nebula/content.css");
