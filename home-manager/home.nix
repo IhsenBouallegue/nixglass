@@ -124,50 +124,12 @@
   # tail. `gtk.iconTheme` writes gsettings + gtk-3.0/settings.ini for GTK
   # apps; the GTK_ICON_THEME / QT_ICON_THEME env vars cover Qt apps
   # (including DMS's quickshell-based spotlight).
-  # GTK theme. adw-gtk3 ports libadwaita's look back to GTK3 so zenity,
-  # nautilus, file-pickers etc. match the dark surface. Accent overrides
-  # below recolour focus rings / buttons / progress bars to the matte-candy
-  # coral so the askpass dialog and any GTK file pickers brand consistently
-  # with mango/ghostty/DMS.
-  gtk = let
-    p = import ./themes/matte-candy.nix;
-    # GTK3 (zenity, gtk3 file pickers) reads @theme_selected_bg_color /
-    # @theme_selected_fg_color for selection + focus rings. GTK4 /
-    # libadwaita reads @accent_bg_color / @accent_color. Override both
-    # so the accent lands consistently regardless of toolkit version.
-    accentCss = ''
-      @define-color accent_bg_color ${p.accent};
-      @define-color accent_color ${p.accent};
-      @define-color accent_fg_color #ffffff;
-      @define-color theme_selected_bg_color ${p.accent};
-      @define-color theme_selected_fg_color #ffffff;
-      @define-color theme_unfocused_selected_bg_color ${p.accent};
-      @define-color theme_unfocused_selected_fg_color #ffffff;
-      @define-color focus_border_color ${p.accent};
-      @define-color borders ${p.color8};
-      @define-color unfocused_borders ${p.color8};
-      entry:focus:focus, entry:focus-within:focus-within {
-        border-color: ${p.accent};
-        box-shadow: inset 0 0 0 2px ${p.accent};
-        outline-color: ${p.accent};
-      }
-      button:focus:focus, button:focus-visible:focus-visible {
-        outline-color: ${p.accent};
-        border-color: ${p.accent};
-      }
-    '';
-  in {
+  gtk = {
     enable = true;
-    theme = {
-      name = "adw-gtk3-dark";
-      package = pkgs.adw-gtk3;
-    };
     iconTheme = {
       name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
     };
-    gtk3.extraCss = accentCss;
-    gtk4.extraCss = accentCss;
   };
 
   home.sessionVariables = {
