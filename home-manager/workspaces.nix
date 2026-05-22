@@ -19,9 +19,11 @@
   # surface that maps on the focused tag.
   #
   # Layout is whatever the focused tag is set to (dwindle by default — see
-  # tagrules in mango.nix). Ghostty is launched first so it owns the focused
-  # pane; Zen comes next and the dwindle split puts it at ~1/3 (via
-  # dwindle_split_ratio in mango.nix).
+  # tagrules in mango.nix). Order matters for the dwindle split:
+  # dwindle_split_ratio is the share the *existing* focused window keeps,
+  # so spawning Zen first then zellij leaves Zen at ~1/3 and gives zellij
+  # the remaining ~2/3. Wait between the two so Zen is fully mapped before
+  # the split fires.
   mango-project = pkgs.writeShellApplication {
     name = "mango-project";
     runtimeInputs = [pkgs.mangowc config.programs.zellij.package];
@@ -44,22 +46,6 @@
         done < "$proj/.workspace"
       fi
 
-      if [ -n "$proj" ] && [ -d "$proj" ]; then
-        cd "$proj"
-        # Fresh zellij session per project. --new-session-with-layout
-        # refuses to attach to an existing session, so cycle any stale
-        # one first (kill detaches running clients, delete removes the
-        # on-disk session dir under ~/.cache/zellij).
-        session="dev-$(basename "$proj")"
-        zellij kill-session "$session" 2>/dev/null || true
-        zellij delete-session "$session" 2>/dev/null || true
-        ${ghostty} --working-directory="$proj" +new-window \
-          -e bash -lic "exec zellij -s '$session' --new-session-with-layout dev" &
-      else
-        ${ghostty} +new-window &
-      fi
-      sleep 0.1
-
       # Zen tab orchestration. firefox-family CLI tries to be helpful and
       # routes `--new-tab` to the "most recently used window," but in
       # practice (Zen 1.20t, mango/Wayland), passing multiple URLs in one
@@ -80,6 +66,26 @@
             zen-twilight --new-tab "$u"
           done
         fi
+      fi
+
+      # Let Zen finish mapping before zellij splits the pane — otherwise
+      # the dwindle split can fire against the pre-existing focused window
+      # (whatever was on the tag before) and Zen lands in the wrong slot.
+      sleep 1.0
+
+      if [ -n "$proj" ] && [ -d "$proj" ]; then
+        cd "$proj"
+        # Fresh zellij session per project. --new-session-with-layout
+        # refuses to attach to an existing session, so cycle any stale
+        # one first (kill detaches running clients, delete removes the
+        # on-disk session dir under ~/.cache/zellij).
+        session="dev-$(basename "$proj")"
+        zellij kill-session "$session" 2>/dev/null || true
+        zellij delete-session "$session" 2>/dev/null || true
+        ${ghostty} --working-directory="$proj" +new-window \
+          -e bash -lic "exec zellij -s '$session' --new-session-with-layout dev" &
+      else
+        ${ghostty} +new-window &
       fi
     '';
   };
