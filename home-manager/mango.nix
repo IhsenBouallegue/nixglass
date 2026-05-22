@@ -70,7 +70,7 @@ in {
     shadows_position_y = 0
     shadowscolor= 0x000000ff
 
-    border_radius=6
+    border_radius=4
     no_radius_when_single=0
     focused_opacity=1.0
     unfocused_opacity=1.0
@@ -177,16 +177,23 @@ in {
     globalcolor=0xb153a7ff
     overlaycolor=0x14a57cff
 
-    # layout
-    tagrule=id:1,layout_name:tile
-    tagrule=id:2,layout_name:tile
-    tagrule=id:3,layout_name:tile
-    tagrule=id:4,layout_name:tile
-    tagrule=id:5,layout_name:tile
-    tagrule=id:6,layout_name:tile
-    tagrule=id:7,layout_name:tile
-    tagrule=id:8,layout_name:tile
-    tagrule=id:9,layout_name:tile
+    # layout — Hyprland-style binary-tree splits (dwindle).
+    # New windows split the focused window; dwindle_split_ratio controls
+    # how much of the parent the new pane takes. 0.33 means the second
+    # window in the pair gets ~1/3 of the parent's space — which lines up
+    # with "browser at 33% of screen" when ghostty is opened first and Zen
+    # second (the order mango-project uses).
+    tagrule=id:1,layout_name:dwindle
+    tagrule=id:2,layout_name:dwindle
+    tagrule=id:3,layout_name:dwindle
+    tagrule=id:4,layout_name:dwindle
+    tagrule=id:5,layout_name:dwindle
+    tagrule=id:6,layout_name:dwindle
+    tagrule=id:7,layout_name:dwindle
+    tagrule=id:8,layout_name:dwindle
+    tagrule=id:9,layout_name:dwindle
+
+    dwindle_split_ratio=0.33
 
     # DankMaterialShell integration — DMS writes monitor/output rules,
     # palette, and gaps/radius to these files when its settings panel
@@ -227,6 +234,19 @@ in {
     # screenshot — `dms screenshot` is compositor-agnostic, interactive
     # region select, saves to file + clipboard.
     bind=SUPER+SHIFT,s,spawn,${config.programs.dank-material-shell.package}/bin/dms screenshot
+
+    # media keys — route through `dms ipc` rather than wpctl/playerctl so
+    # the DMS OSD renders. The IPC handlers wrap PipeWire/MPRIS and emit
+    # the visual feedback (volume bar, media popup) at the same time.
+    # Using wpctl directly works but skips the OSD because DMS triggers
+    # it on IPC, not on PipeWire state change.
+    bind=NONE,XF86AudioRaiseVolume,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call audio increment 5
+    bind=NONE,XF86AudioLowerVolume,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call audio decrement 5
+    bind=NONE,XF86AudioMute,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call audio mute
+    bind=NONE,XF86AudioMicMute,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call audio micmute
+    bind=NONE,XF86AudioPlay,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call mpris playPause
+    bind=NONE,XF86AudioNext,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call mpris next
+    bind=NONE,XF86AudioPrev,spawn,${config.programs.dank-material-shell.package}/bin/dms ipc call mpris previous
 
     # exit
     bind=SUPER,m,quit
@@ -288,6 +308,12 @@ in {
     # workspace prev/next
     bind=SUPER+CTRL,Left,viewtoleft,0
     bind=SUPER+CTRL,Right,viewtoright,0
+
+    # project workspace — fuzzel picker over ~/Documents/repos/*/.workspace
+    # markers; selecting one spawns browser+editor+terminal on the current
+    # tag in tile layout with the project as working dir. See
+    # home-manager/workspaces.nix.
+    bind=SUPER+CTRL,p,spawn,mango-project-picker
 
     # gaps
     bind=SUPER+SHIFT,X,incgaps,1
